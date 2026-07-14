@@ -1,0 +1,44 @@
+package com.example.ringerscheduler
+
+import android.content.Context
+import android.content.SharedPreferences
+
+class PreferenceHelper(context: Context) {
+    private val prefs: SharedPreferences = context.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
+
+    var muteHour: Int
+        get() = prefs.getInt(Constants.KEY_MUTE_HOUR, 8)
+        set(value) = prefs.edit().putInt(Constants.KEY_MUTE_HOUR, value).apply()
+
+    var muteMinute: Int
+        get() = prefs.getInt(Constants.KEY_MUTE_MINUTE, 30)
+        set(value) = prefs.edit().putInt(Constants.KEY_MUTE_MINUTE, value).apply()
+
+    var unmuteHour: Int
+        get() = prefs.getInt(Constants.KEY_UNMUTE_HOUR, 18)
+        set(value) = prefs.edit().putInt(Constants.KEY_UNMUTE_HOUR, value).apply()
+
+    var unmuteMinute: Int
+        get() = prefs.getInt(Constants.KEY_UNMUTE_MINUTE, 0)
+        set(value) = prefs.edit().putInt(Constants.KEY_UNMUTE_MINUTE, value).apply()
+
+    var homeWifiSsid: String
+        get() = prefs.getString(Constants.KEY_HOME_WIFI_SSID, "") ?: ""
+        set(value) = prefs.edit().putString(Constants.KEY_HOME_WIFI_SSID, value).apply()
+
+    var isScheduleEnabled: Boolean
+        get() = prefs.getBoolean(Constants.KEY_SCHEDULE_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(Constants.KEY_SCHEDULE_ENABLED, value).apply()
+
+    var prevRingVolume: Int
+        get() = prefs.getInt(Constants.KEY_PREV_RING_VOLUME, -1)
+        set(value) = prefs.edit().putInt(Constants.KEY_PREV_RING_VOLUME, value).apply()
+
+    var prevRingerMode: Int
+        get() = prefs.getInt(Constants.KEY_PREV_RINGER_MODE, -1)
+        set(value) = prefs.edit().putInt(Constants.KEY_PREV_RINGER_MODE, value).apply()
+
+    var activeDays: Set<String>
+        get() = prefs.getStringSet(Constants.KEY_ACTIVE_DAYS, setOf("2", "3", "4", "5", "6")) ?: setOf("2", "3", "4", "5", "6")
+        set(value) = prefs.edit().putStringSet(Constants.KEY_ACTIVE_DAYS, value).apply()
+}

@@ -1,0 +1,496 @@
+package com.example.ringerscheduler
+
+import android.Manifest
+import android.app.AlarmManager
+import android.app.NotificationManager
+import android.app.TimePickerDialog
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.pm.PackageManager
+import android.location.LocationManager
+import android.net.wifi.ScanResult
+import android.net.wifi.WifiManager
+import android.os.Build
+import android.os.Bundle
+import android.provider.Settings
+import android.view.View
+import android.widget.EditText
+import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.chip.Chip
+import com.google.android.material.chip.ChipGroup
+import com.google.android.material.switchmaterial.SwitchMaterial
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
+import java.util.Calendar
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var tvMuteTime: TextView
+    private lateinit var tvUnmuteTime: TextView
+    private lateinit var etWifiSsid: EditText
+    private lateinit var switchSchedule: SwitchMaterial
+    private lateinit var tvCurrentStatus: TextView
+    private lateinit var cardStatus: com.google.android.material.card.MaterialCardView
+    private lateinit var ivStatusIcon: ImageView
+    private lateinit var btnGrantDnd: MaterialButton
+    private lateinit var btnGrantAlarm: MaterialButton
+    private lateinit var btnGrantLocation: MaterialButton
+    private lateinit var btnGrantBackgroundLocation: MaterialButton
+    private lateinit var ivCheckDnd: ImageView
+    private lateinit var ivCheckAlarm: ImageView
+    private lateinit var ivCheckLocation: ImageView
+    private lateinit var chipGroupDays: ChipGroup
+    private lateinit var btnPickWifi: MaterialButton
+    private lateinit var pbWifiScan: ProgressBar
+    private lateinit var btnBatterySettings: MaterialButton
+
+    private lateinit var preferenceHelper: PreferenceHelper
+    private lateinit var alarmScheduler: AlarmScheduler
+
+    private val requestLocationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        updatePermissionStatus()
+        val fineLocationGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] ?: false
+        if (!fineLocationGranted) {
+            Toast.makeText(this, "Location permission denied. Wi-Fi exception will be skipped.", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private val requestNotificationPolicyLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        updatePermissionStatus()
+    }
+
+    private val requestExactAlarmLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) {
+        updatePermissionStatus()
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        preferenceHelper = PreferenceHelper(this)
+        alarmScheduler = AlarmScheduler(this)
+
+        initViews()
+        setupUI()
+        checkPermissions()
+    }
+
+    private fun initViews() {
+        tvMuteTime = findViewById(R.id.tvMuteTime)
+        tvUnmuteTime = findViewById(R.id.tvUnmuteTime)
+        etWifiSsid = findViewById(R.id.etWifiSsid)
+        switchSchedule = findViewById(R.id.switchSchedule)
+        tvCurrentStatus = findViewById(R.id.tvCurrentStatus)
+        cardStatus = findViewById(R.id.cardStatus)
+        ivStatusIcon = findViewById(R.id.ivStatusIcon)
+        btnGrantDnd = findViewById(R.id.btnGrantDnd)
+        btnGrantAlarm = findViewById(R.id.btnGrantAlarm)
+        btnGrantLocation = findViewById(R.id.btnGrantLocation)
+        btnGrantBackgroundLocation = findViewById(R.id.btnGrantBackgroundLocation)
+        ivCheckDnd = findViewById(R.id.ivCheckDnd)
+        ivCheckAlarm = findViewById(R.id.ivCheckAlarm)
+        ivCheckLocation = findViewById(R.id.ivCheckLocation)
+        chipGroupDays = findViewById(R.id.chipGroupDays)
+        btnPickWifi = findViewById(R.id.btnPickWifi)
+        pbWifiScan = findViewById(R.id.pbWifiScan)
+        btnBatterySettings = findViewById(R.id.btnBatterySettings)
+    }
+
+    private fun setupUI() {
+        updateTimeText(tvMuteTime, preferenceHelper.muteHour, preferenceHelper.muteMinute)
+        updateTimeText(tvUnmuteTime, preferenceHelper.unmuteHour, preferenceHelper.unmuteMinute)
+        
+        etWifiSsid.setText(preferenceHelper.homeWifiSsid)
+        switchSchedule.isChecked = preferenceHelper.isScheduleEnabled
+
+        btnPickWifi.setOnClickListener {
+            scanAndPickWifi()
+        }
+
+        findViewById<View>(R.id.btnMuteTime).setOnClickListener {
+            showTimePicker("Select Start Time", preferenceHelper.muteHour, preferenceHelper.muteMinute) { hour, minute ->
+                preferenceHelper.muteHour = hour
+                preferenceHelper.muteMinute = minute
+                updateTimeText(tvMuteTime, hour, minute)
+                if (switchSchedule.isChecked) {
+                    alarmScheduler.scheduleAlarms()
+                }
+            }
+        }
+
+        findViewById<View>(R.id.btnUnmuteTime).setOnClickListener {
+            showTimePicker("Select End Time", preferenceHelper.unmuteHour, preferenceHelper.unmuteMinute) { hour, minute ->
+                preferenceHelper.unmuteHour = hour
+                preferenceHelper.unmuteMinute = minute
+                updateTimeText(tvUnmuteTime, hour, minute)
+                if (switchSchedule.isChecked) {
+                    alarmScheduler.scheduleAlarms()
+                }
+            }
+        }
+
+        switchSchedule.setOnCheckedChangeListener { _, isChecked ->
+            preferenceHelper.homeWifiSsid = etWifiSsid.text.toString().trim()
+            preferenceHelper.isScheduleEnabled = isChecked
+            
+            if (isChecked) {
+                if (hasSpecialPermissions()) {
+                    alarmScheduler.scheduleAlarms()
+                    Toast.makeText(this, "Schedule Enabled", Toast.LENGTH_SHORT).show()
+                } else {
+                    switchSchedule.isChecked = false
+                    preferenceHelper.isScheduleEnabled = false
+                    Toast.makeText(this, "Permissions required", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                alarmScheduler.cancelAlarms()
+                Toast.makeText(this, "Schedule Disabled", Toast.LENGTH_SHORT).show()
+            }
+            updateStatusCard()
+        }
+
+        setupDayChips()
+        updateStatusCard()
+        updatePermissionStatus()
+
+        btnGrantDnd.setOnClickListener {
+            val intent = Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)
+            requestNotificationPolicyLauncher.launch(intent)
+        }
+
+        btnGrantAlarm.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
+                requestExactAlarmLauncher.launch(intent)
+            }
+        }
+
+        btnGrantLocation.setOnClickListener {
+            val hasLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+            
+            if (!hasLocationPermission) {
+                requestLocationPermissionLauncher.launch(
+                    arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION)
+                )
+            } else {
+                // If permission is already granted, it must be the GPS that is off
+                startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+            }
+        }
+
+        btnGrantBackgroundLocation.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                AlertDialog.Builder(this)
+                    .setTitle("Allow Always Location Access")
+                    .setMessage("To detect Wi-Fi in the background, please select 'Allow all the time' in the next screen.")
+                    .setPositiveButton("Settings") { _, _ ->
+                        requestLocationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_BACKGROUND_LOCATION))
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            } else {
+                Toast.makeText(this, "Not required for this Android version", Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        btnBatterySettings.setOnClickListener {
+            val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
+            startActivity(intent)
+        }
+    }
+
+    private fun setupDayChips() {
+        val daysMap = mapOf(
+            R.id.chipMon to Calendar.MONDAY.toString(),
+            R.id.chipTue to Calendar.TUESDAY.toString(),
+            R.id.chipWed to Calendar.WEDNESDAY.toString(),
+            R.id.chipThu to Calendar.THURSDAY.toString(),
+            R.id.chipFri to Calendar.FRIDAY.toString(),
+            R.id.chipSat to Calendar.SATURDAY.toString(),
+            R.id.chipSun to Calendar.SUNDAY.toString()
+        )
+
+        val activeDays = preferenceHelper.activeDays
+        daysMap.forEach { (id, dayValue) ->
+            val chip = findViewById<Chip>(id)
+            chip.isChecked = activeDays.contains(dayValue)
+            chip.setOnCheckedChangeListener { _, isChecked ->
+                val currentActive = preferenceHelper.activeDays.toMutableSet()
+                if (isChecked) currentActive.add(dayValue) else currentActive.remove(dayValue)
+                preferenceHelper.activeDays = currentActive
+                if (switchSchedule.isChecked) {
+                    alarmScheduler.scheduleAlarms()
+                }
+            }
+        }
+    }
+
+    private fun updateStatusCard() {
+        if (preferenceHelper.isScheduleEnabled) {
+            tvCurrentStatus.text = "Scheduler is Active"
+            tvCurrentStatus.setTextColor(ContextCompat.getColor(this, R.color.success_green))
+            cardStatus.setCardBackgroundColor(ContextCompat.getColor(this, R.color.status_active_bg))
+            cardStatus.strokeColor = ContextCompat.getColor(this, R.color.success_green)
+            ivStatusIcon.setImageResource(R.drawable.ic_check_circle)
+            ivStatusIcon.setColorFilter(ContextCompat.getColor(this, R.color.success_green))
+            ivStatusIcon.alpha = 1.0f
+        } else {
+            tvCurrentStatus.text = "Scheduler is Disabled"
+            tvCurrentStatus.setTextColor(ContextCompat.getColor(this, R.color.text_error))
+            cardStatus.setCardBackgroundColor(ContextCompat.getColor(this, R.color.surface))
+            cardStatus.strokeColor = ContextCompat.getColor(this, R.color.card_stroke)
+            ivStatusIcon.setImageResource(R.drawable.ic_check_circle)
+            ivStatusIcon.setColorFilter(ContextCompat.getColor(this, R.color.text_error))
+            ivStatusIcon.alpha = 0.5f
+        }
+    }
+
+    private fun updatePermissionStatus() {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val hasDnd = notificationManager.isNotificationPolicyAccessGranted
+        
+        val hasExactAlarm = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            alarmManager.canScheduleExactAlarms()
+        } else {
+            true
+        }
+
+        val hasLocationPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+
+        val hasBackgroundLocation = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+
+        // Check if Location Services (GPS) are enabled
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val isGpsEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            locationManager.isLocationEnabled
+        } else {
+            @Suppress("DEPRECATION")
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                    locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        }
+
+        // Update DND UI
+        if (hasDnd) {
+            btnGrantDnd.visibility = View.GONE
+            ivCheckDnd.visibility = View.VISIBLE
+        } else {
+            btnGrantDnd.visibility = View.VISIBLE
+            ivCheckDnd.visibility = View.GONE
+        }
+
+        // Update Alarm UI
+        if (hasExactAlarm) {
+            btnGrantAlarm.visibility = View.GONE
+            ivCheckAlarm.visibility = View.VISIBLE
+        } else {
+            btnGrantAlarm.visibility = View.VISIBLE
+            ivCheckAlarm.visibility = View.GONE
+        }
+
+        // Update Location UI - Must have BOTH permission AND GPS enabled
+        if (hasLocationPermission && isGpsEnabled) {
+            btnGrantLocation.visibility = View.GONE
+            ivCheckLocation.visibility = View.VISIBLE
+        } else {
+            btnGrantLocation.visibility = View.VISIBLE
+            ivCheckLocation.visibility = View.GONE
+            
+            // Update button text to guide user
+            if (!hasLocationPermission) {
+                btnGrantLocation.text = "Grant"
+            } else if (!isGpsEnabled) {
+                btnGrantLocation.text = "Turn on GPS"
+            }
+        }
+
+        // Update Background Location UI
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            findViewById<View>(R.id.layoutPermissionBackgroundLocation).visibility = View.VISIBLE
+            if (hasBackgroundLocation) {
+                btnGrantBackgroundLocation.visibility = View.GONE
+                findViewById<View>(R.id.ivCheckBackgroundLocation).visibility = View.VISIBLE
+            } else {
+                btnGrantBackgroundLocation.visibility = View.VISIBLE
+                findViewById<View>(R.id.ivCheckBackgroundLocation).visibility = View.GONE
+            }
+        } else {
+            findViewById<View>(R.id.layoutPermissionBackgroundLocation).visibility = View.GONE
+        }
+    }
+
+    private fun hasSpecialPermissions(): Boolean {
+        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (!notificationManager.isNotificationPolicyAccessGranted) return false
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+            if (!alarmManager.canScheduleExactAlarms()) return false
+        }
+        return true
+    }
+
+    private fun updateTimeText(textView: TextView, hour: Int, minute: Int) {
+        val amPm = if (hour < 12) "AM" else "PM"
+        val hourIn12 = when {
+            hour == 0 -> 12
+            hour > 12 -> hour - 12
+            else -> hour
+        }
+        textView.text = String.format("%02d:%02d %s", hourIn12, minute, amPm)
+    }
+
+    private fun showTimePicker(title: String, initialHour: Int, initialMinute: Int, onTimeSelected: (Int, Int) -> Unit) {
+        val picker = MaterialTimePicker.Builder()
+            .setTimeFormat(TimeFormat.CLOCK_12H)
+            .setHour(initialHour)
+            .setMinute(initialMinute)
+            .setTitleText(title)
+            .setTheme(R.style.CustomTimePickerTheme)
+            .build()
+
+        picker.addOnPositiveButtonClickListener {
+            onTimeSelected(picker.hour, picker.minute)
+        }
+        
+        picker.show(supportFragmentManager, "MATERIAL_TIME_PICKER")
+    }
+
+    private fun scanAndPickWifi() {
+        val wifiManager = applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        
+        if (!wifiManager.isWifiEnabled) {
+            Toast.makeText(this, "Please enable Wi-Fi first", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        // Check Location Permission
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestLocationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+            return
+        }
+
+        // Check if Location Services are enabled (Required for Wi-Fi scanning)
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val isLocationEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            locationManager.isLocationEnabled
+        } else {
+            @Suppress("DEPRECATION")
+            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                    locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+        }
+
+        if (!isLocationEnabled) {
+            AlertDialog.Builder(this)
+                .setTitle("Location Services Disabled")
+                .setMessage("Location services must be enabled to scan for Wi-Fi networks. Please enable it in settings.")
+                .setPositiveButton("Settings") { _, _ ->
+                    startActivity(Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS))
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+            return
+        }
+
+        btnPickWifi.visibility = View.GONE
+        pbWifiScan.visibility = View.VISIBLE
+
+        val wifiScanReceiver = object : android.content.BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) {
+                if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    showWifiSelectionDialog(wifiManager.scanResults)
+                }
+                try {
+                    unregisterReceiver(this)
+                } catch (e: Exception) {}
+                btnPickWifi.visibility = View.VISIBLE
+                pbWifiScan.visibility = View.GONE
+            }
+        }
+
+        val intentFilter = IntentFilter()
+        intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION)
+        registerReceiver(wifiScanReceiver, intentFilter)
+
+        @Suppress("DEPRECATION")
+        val success = wifiManager.startScan()
+        if (!success) {
+            // scan failure handling - immediately show cached results if scan couldn't start
+            if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                showWifiSelectionDialog(wifiManager.scanResults)
+            }
+            try {
+                unregisterReceiver(wifiScanReceiver)
+            } catch (e: Exception) {}
+            btnPickWifi.visibility = View.VISIBLE
+            pbWifiScan.visibility = View.GONE
+        }
+    }
+
+    private fun showWifiSelectionDialog(scanResults: List<ScanResult>) {
+        @Suppress("DEPRECATION")
+        val ssids = scanResults
+            .map { it.SSID }
+            .filter { it.isNotBlank() }
+            .distinct()
+            .toTypedArray()
+
+        if (ssids.isEmpty()) {
+            Toast.makeText(this, "No Wi-Fi networks found", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("Select Wi-Fi Network")
+            .setItems(ssids) { _, which ->
+                val selectedSsid = ssids[which]
+                etWifiSsid.setText(selectedSsid)
+                preferenceHelper.homeWifiSsid = selectedSsid
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun checkPermissions() {
+        val permissionsToRequest = mutableListOf<String>()
+        if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+        if (checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            permissionsToRequest.add(Manifest.permission.ACCESS_COARSE_LOCATION)
+        }
+        if (permissionsToRequest.isNotEmpty()) {
+            requestLocationPermissionLauncher.launch(permissionsToRequest.toTypedArray())
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        updatePermissionStatus()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        preferenceHelper.homeWifiSsid = etWifiSsid.text.toString().trim()
+    }
+}

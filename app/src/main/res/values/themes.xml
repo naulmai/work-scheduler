@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.WorkScheduler" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorPrimaryVariant">@color/primary_variant</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/secondary</item>
+        <item name="colorSecondaryVariant">@color/secondary</item>
+        <item name="colorOnSecondary">@color/black</item>
+
+        <!-- UI Colors -->
+        <item name="android:windowBackground">@color/background</item>
+        <item name="android:statusBarColor">@color/background</item>
+        <item name="android:navigationBarColor">@color/background</item>
+
+        <!-- Material Component Styles -->
+        <item name="materialCardViewStyle">@style/CustomCardView</item>
+        <item name="chipStyle">@style/CustomChip</item>
+    </style>
+
+    <style name="CustomTimePickerTheme" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="colorPrimary">@color/primary</item>
+        <item name="colorSurface">@color/surface</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="colorContainer">@color/surface</item>
+        <item name="colorOnContainer">@color/white</item>
+    </style>
+
+    <style name="CustomCardView" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">20dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="strokeColor">@color/card_stroke</item>
+        <item name="strokeWidth">1.5dp</item>
+    </style>
+
+    <style name="CustomChip" parent="Widget.MaterialComponents.Chip.Filter">
+        <item name="chipBackgroundColor">@color/chip_bg_state</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="chipStrokeWidth">0dp</item>
+    </style>
+</resources>
