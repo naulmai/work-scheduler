@@ -40,6 +40,7 @@ import com.google.android.material.chip.ChipGroup
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
+import android.graphics.Typeface
 import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
@@ -67,6 +68,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pbWifiScan: ProgressBar
     private lateinit var btnBatterySettings: MaterialButton
     private lateinit var btnThemeToggle: MaterialButton
+    private lateinit var btnViewAllLogs: MaterialButton
+    private lateinit var btnRefreshLogs: MaterialButton
     
     private lateinit var tvCloudStatus: TextView
     private lateinit var btnBackup: MaterialButton
@@ -82,6 +85,12 @@ class MainActivity : AppCompatActivity() {
     private lateinit var dbHelper: LogDatabaseHelper
     
     private val auth = FirebaseAuth.getInstance()
+
+    private val logUpdateReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: android.content.Intent?) {
+            updateLatestLog()
+        }
+    }
 
     private val requestLocationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -157,6 +166,8 @@ class MainActivity : AppCompatActivity() {
         pbWifiScan = findViewById(R.id.pbWifiScan)
         btnBatterySettings = findViewById(R.id.btnBatterySettings)
         btnThemeToggle = findViewById(R.id.btnThemeToggle)
+        btnViewAllLogs = findViewById(R.id.btnViewAllLogs)
+        btnRefreshLogs = findViewById(R.id.btnRefreshLogs)
         tvCloudStatus = findViewById(R.id.tvCloudStatus)
         btnBackup = findViewById(R.id.btnBackup)
         btnRestore = findViewById(R.id.btnRestore)
@@ -169,7 +180,14 @@ class MainActivity : AppCompatActivity() {
         updateTimeText(tvMuteTime, preferenceHelper.muteHour, preferenceHelper.muteMinute)
         updateTimeText(tvUnmuteTime, preferenceHelper.unmuteHour, preferenceHelper.unmuteMinute)
         
-        etWifiSsid.setText(preferenceHelper.homeWifiSsid)
+        val homeSsids = preferenceHelper.homeWifiSsids
+        if (homeSsids.isNotEmpty()) {
+            etWifiSsid.setText(homeSsids.joinToString(", "))
+            etWifiSsid.setTypeface(null, Typeface.BOLD)
+        } else {
+            etWifiSsid.setText("")
+            etWifiSsid.setTypeface(null, Typeface.NORMAL)
+        }
         switchSchedule.isChecked = preferenceHelper.isScheduleEnabled
 
         btnPickWifi.setOnClickListener {
@@ -183,6 +201,7 @@ class MainActivity : AppCompatActivity() {
                 updateTimeText(tvMuteTime, hour, minute)
                 if (switchSchedule.isChecked) {
                     alarmScheduler.scheduleAlarms()
+                    sendBroadcast(Intent(this, ScheduleReceiver::class.java).apply { action = Constants.ACTION_CHECK_STATUS })
                 }
             }
         }
@@ -194,17 +213,27 @@ class MainActivity : AppCompatActivity() {
                 updateTimeText(tvUnmuteTime, hour, minute)
                 if (switchSchedule.isChecked) {
                     alarmScheduler.scheduleAlarms()
+                    sendBroadcast(Intent(this, ScheduleReceiver::class.java).apply { action = Constants.ACTION_CHECK_STATUS })
                 }
             }
         }
 
         switchSchedule.setOnCheckedChangeListener { _, isChecked ->
-            preferenceHelper.homeWifiSsid = etWifiSsid.text.toString().trim()
+            val ssids = etWifiSsid.text.toString().split(",")
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .toSet()
+            preferenceHelper.homeWifiSsids = ssids
             preferenceHelper.isScheduleEnabled = isChecked
             
             if (isChecked) {
                 if (hasSpecialPermissions()) {
                     alarmScheduler.scheduleAlarms()
+                    // Bug Fix: Trigger immediate status check
+                    val checkIntent = Intent(this, ScheduleReceiver::class.java).apply {
+                        action = Constants.ACTION_CHECK_STATUS
+                    }
+                    sendBroadcast(checkIntent)
                     Toast.makeText(this, "Schedule Enabled", Toast.LENGTH_SHORT).show()
                 } else {
                     switchSchedule.isChecked = false
@@ -221,6 +250,15 @@ class MainActivity : AppCompatActivity() {
         btnThemeToggle.setOnClickListener {
             preferenceHelper.isDarkMode = !preferenceHelper.isDarkMode
             recreate() // Restart activity to apply new theme
+        }
+
+        btnViewAllLogs.setOnClickListener {
+            startActivity(Intent(this, HistoryActivity::class.java))
+        }
+
+        btnRefreshLogs.setOnClickListener {
+            updateLatestLog()
+            Toast.makeText(this, "Logs updated", Toast.LENGTH_SHORT).show()
         }
 
         setupDayChips()
@@ -371,7 +409,11 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupGeofencingUI() {
         if (preferenceHelper.workLat != 0f && preferenceHelper.workLng != 0f) {
-            tvWorkLocation.text = "Location: Set (Lat: ${String.format("%.4f", preferenceHelper.workLat)})"
+            tvWorkLocation.text = "Set (Lat: ${String.format("%.4f", preferenceHelper.workLat)})"
+            tvWorkLocation.setTypeface(null, Typeface.BOLD)
+        } else {
+            tvWorkLocation.text = "Not set"
+            tvWorkLocation.setTypeface(null, Typeface.NORMAL)
         }
         
         switchGeofencing.isChecked = preferenceHelper.isGeofencingEnabled
@@ -394,6 +436,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
             preferenceHelper.isGeofencingEnabled = isChecked
+            if (switchSchedule.isChecked) {
+                sendBroadcast(Intent(this, ScheduleReceiver::class.java).apply { action = Constants.ACTION_CHECK_STATUS })
+            }
         }
     }
 
@@ -418,6 +463,7 @@ class MainActivity : AppCompatActivity() {
                 preferenceHelper.activeDays = currentActive
                 if (switchSchedule.isChecked) {
                     alarmScheduler.scheduleAlarms()
+                    sendBroadcast(Intent(this, ScheduleReceiver::class.java).apply { action = Constants.ACTION_CHECK_STATUS })
                 }
             }
         }
@@ -566,8 +612,12 @@ class MainActivity : AppCompatActivity() {
             if (location != null) {
                 preferenceHelper.workLat = location.latitude.toFloat()
                 preferenceHelper.workLng = location.longitude.toFloat()
-                tvWorkLocation.text = "Location: Set (Lat: ${String.format("%.4f", preferenceHelper.workLat)})"
+                tvWorkLocation.text = "Set (Lat: ${String.format("%.4f", preferenceHelper.workLat)})"
+                tvWorkLocation.setTypeface(null, Typeface.BOLD)
                 Toast.makeText(this, "Work location updated!", Toast.LENGTH_SHORT).show()
+                if (switchSchedule.isChecked) {
+                    sendBroadcast(Intent(this, ScheduleReceiver::class.java).apply { action = Constants.ACTION_CHECK_STATUS })
+                }
             } else {
                 Toast.makeText(this, "Could not get current location", Toast.LENGTH_SHORT).show()
             }
@@ -674,23 +724,41 @@ class MainActivity : AppCompatActivity() {
 
     private fun showWifiSelectionDialog(scanResults: List<ScanResult>) {
         @Suppress("DEPRECATION")
-        val ssids = scanResults
+        val availableSsids = scanResults
             .map { it.SSID }
             .filter { it.isNotBlank() }
             .distinct()
             .toTypedArray()
 
-        if (ssids.isEmpty()) {
+        if (availableSsids.isEmpty()) {
             Toast.makeText(this, "No Wi-Fi networks found", Toast.LENGTH_SHORT).show()
             return
         }
 
+        val currentSelected = preferenceHelper.homeWifiSsids.toMutableSet()
+        val checkedItems = availableSsids.map { currentSelected.contains(it) }.toBooleanArray()
+
         AlertDialog.Builder(this)
-            .setTitle("Select Wi-Fi Network")
-            .setItems(ssids) { _, which ->
-                val selectedSsid = ssids[which]
-                etWifiSsid.setText(selectedSsid)
-                preferenceHelper.homeWifiSsid = selectedSsid
+            .setTitle("Select Wi-Fi Networks")
+            .setMultiChoiceItems(availableSsids, checkedItems) { _, which, isChecked ->
+                if (isChecked) {
+                    currentSelected.add(availableSsids[which])
+                } else {
+                    currentSelected.remove(availableSsids[which])
+                }
+            }
+            .setPositiveButton("OK") { _, _ ->
+                preferenceHelper.homeWifiSsids = currentSelected
+                if (currentSelected.isNotEmpty()) {
+                    etWifiSsid.setText(currentSelected.joinToString(", "))
+                    etWifiSsid.setTypeface(null, Typeface.BOLD)
+                } else {
+                    etWifiSsid.setText("")
+                    etWifiSsid.setTypeface(null, Typeface.NORMAL)
+                }
+                if (switchSchedule.isChecked) {
+                    sendBroadcast(Intent(this, ScheduleReceiver::class.java).apply { action = Constants.ACTION_CHECK_STATUS })
+                }
             }
             .setNegativeButton("Cancel", null)
             .show()
@@ -713,20 +781,39 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         updatePermissionStatus()
         updateLatestLog()
-    }
-
-    private fun updateLatestLog() {
-        val logs = dbHelper.getAllLogs()
-        if (logs.isNotEmpty()) {
-            val latest = logs[0]
-            val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
-            val time = sdf.format(java.util.Date(latest.timestamp))
-            tvLatestLog.text = "[$time] ${latest.message}"
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(logUpdateReceiver, android.content.IntentFilter(Constants.ACTION_LOGS_UPDATED), Context.RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(logUpdateReceiver, android.content.IntentFilter(Constants.ACTION_LOGS_UPDATED))
         }
     }
 
     override fun onPause() {
         super.onPause()
-        preferenceHelper.homeWifiSsid = etWifiSsid.text.toString().trim()
+        unregisterReceiver(logUpdateReceiver)
+        val ssids = etWifiSsid.text.toString().split(",")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .toSet()
+        preferenceHelper.homeWifiSsids = ssids
+    }
+
+    private fun updateLatestLog() {
+        val logs = dbHelper.getAllLogs()
+        if (logs.isNotEmpty()) {
+            val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+            val displayCount = if (logs.size > 5) 5 else logs.size
+            val latestText = StringBuilder()
+            
+            for (i in 0 until displayCount) {
+                val log = logs[i]
+                val time = sdf.format(java.util.Date(log.timestamp))
+                latestText.append("[$time] ${log.message}")
+                if (i < displayCount - 1) latestText.append("\n")
+            }
+            tvLatestLog.text = latestText.toString()
+        } else {
+            tvLatestLog.text = "No activity recorded"
+        }
     }
 }

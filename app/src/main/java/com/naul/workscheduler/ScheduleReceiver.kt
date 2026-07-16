@@ -13,246 +13,213 @@ import android.net.wifi.WifiInfo
 import android.net.wifi.WifiManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.app.PendingIntent
 import androidx.core.app.NotificationCompat
 import android.os.Build
 import android.util.Log
 import android.location.Location
+import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.google.android.gms.tasks.Tasks
 import java.util.concurrent.TimeUnit
-
 import java.util.Calendar
 
 class ScheduleReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
+        val pendingResult = goAsync()
         val action = intent.action
         Log.i("ScheduleReceiver", "Received action: $action")
 
         val preferenceHelper = PreferenceHelper(context)
-        if (!preferenceHelper.isScheduleEnabled) {
-            Log.i("ScheduleReceiver", "Schedule is disabled. Ignoring.")
-            return
-        }
-
-        val calendar = Calendar.getInstance()
-        val currentDay = calendar.get(Calendar.DAY_OF_WEEK).toString()
         val dbHelper = LogDatabaseHelper(context)
-
-        if (!preferenceHelper.activeDays.contains(currentDay)) {
-            Log.i("ScheduleReceiver", "Today ($currentDay) is not an active day. Skipping.")
-            dbHelper.addLog("Skipped: Not an active day")
-            // Reschedule for next check
-            AlarmScheduler(context).scheduleAlarms()
-            return
-        }
-
         val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
+        // Use a background thread for the entire flow to avoid IllegalStateException on main thread
+        Thread {
+            try {
+                processBroadcast(context, action, preferenceHelper, dbHelper, audioManager)
+            } finally {
+                pendingResult.finish()
+            }
+        }.start()
+    }
+
+    private fun processBroadcast(context: Context, action: String?, preferenceHelper: PreferenceHelper, dbHelper: LogDatabaseHelper, audioManager: AudioManager) {
+        // 1. Check Master Switch
+        if (!preferenceHelper.isScheduleEnabled) {
+            applyUnmute(audioManager, preferenceHelper, dbHelper, "Schedule Disabled")
+            return
+        }
+
+        // 2. Check Active Days
+        val currentDay = Calendar.getInstance().get(Calendar.DAY_OF_WEEK).toString()
+        if (!preferenceHelper.activeDays.contains(currentDay)) {
+            if (action != Constants.ACTION_PRE_MUTE) {
+                applyUnmute(audioManager, preferenceHelper, dbHelper, "Not a work day")
+            }
+            return
+        }
+
         when (action) {
-            Constants.ACTION_MUTE -> {
-                if (preferenceHelper.skipNextMute) {
-                    Log.i("ScheduleReceiver", "SkipNextMute is enabled. Skipping this mute action.")
-                    dbHelper.addLog("Skipped: User requested to skip")
-                    preferenceHelper.skipNextMute = false
-                } else {
-                    handleMuteAction(context, audioManager, preferenceHelper, dbHelper)
-                }
+            Constants.ACTION_MUTE, Constants.ACTION_UNMUTE, Constants.ACTION_CHECK_STATUS -> {
+                runEvaluationFlow(context, audioManager, preferenceHelper, dbHelper)
             }
-            Constants.ACTION_UNMUTE -> handleUnmuteAction(audioManager, preferenceHelper, dbHelper)
             Constants.ACTION_PRE_MUTE -> handlePreMuteAction(context, preferenceHelper)
-            Constants.ACTION_SKIP_MUTE -> {
-                preferenceHelper.skipNextMute = true
-                Log.i("ScheduleReceiver", "User requested to skip next mute.")
-                dbHelper.addLog("User skipped next mute action")
-                val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                notificationManager.cancel(200) // Cancel pre-mute notification
-            }
         }
 
-        // Reschedule alarms for the next day
-        val alarmScheduler = AlarmScheduler(context)
-        alarmScheduler.scheduleAlarms()
+        AlarmScheduler(context).scheduleAlarms()
     }
 
-    private fun handleMuteAction(context: Context, audioManager: AudioManager, preferenceHelper: PreferenceHelper, dbHelper: LogDatabaseHelper) {
-        val homeSsid = normalizeSsid(preferenceHelper.homeWifiSsid)
+    private fun runEvaluationFlow(context: Context, audioManager: AudioManager, preferenceHelper: PreferenceHelper, dbHelper: LogDatabaseHelper) {
+        // STEP 1: TIME WINDOW CHECK
+        if (!isCurrentTimeInMuteWindow(preferenceHelper)) {
+            applyUnmute(audioManager, preferenceHelper, dbHelper, "Outside time window")
+            return
+        }
+
+        // STEP 2: HOME WIFI CHECK
         val currentSsid = normalizeSsid(getCurrentWifiSsid(context) ?: "")
-
-        // Check 1: Home Wi-Fi Exception (If at home, skip muting regardless of other conditions)
-        if (homeSsid.isNotEmpty() && currentSsid.equals(homeSsid, ignoreCase = true)) {
-            Log.i("ScheduleReceiver", "At home (SSID: $currentSsid), skipping mute.")
-            dbHelper.addLog("Skipped: Connected to Home Wi-Fi ($currentSsid)")
-            return
-        }
-
-        // Check 2: Location Requirement (If "Require this location" is ON, we must be at work)
-        if (preferenceHelper.isGeofencingEnabled) {
-            val currentLoc = getCurrentLocation(context)
-            val isAtWork = if (currentLoc != null) {
-                val distance = calculateDistance(
-                    currentLoc.first, currentLoc.second,
-                    preferenceHelper.workLat.toDouble(), preferenceHelper.workLng.toDouble()
-                )
-                Log.d("ScheduleReceiver", "Distance to work: ${distance}m (Radius: ${preferenceHelper.geofenceRadius}m)")
-                distance <= preferenceHelper.geofenceRadius
-            } else {
-                Log.w("ScheduleReceiver", "Could not determine location. Falling back to Mute for safety.")
-                true // Fallback to muting if location can't be determined but requirement is ON
-            }
-
-            if (!isAtWork) {
-                Log.i("ScheduleReceiver", "Not at work location. Skipping mute.")
-                dbHelper.addLog("Skipped: Not at work location")
-                return
-            }
-        }
-
-        // Check 3: Current Ringer Mode
-        val currentRingerMode = audioManager.ringerMode
-        Log.d("ScheduleReceiver", "Current ringer mode: $currentRingerMode")
-        if (currentRingerMode == AudioManager.RINGER_MODE_SILENT || currentRingerMode == AudioManager.RINGER_MODE_VIBRATE) {
-            Log.i("ScheduleReceiver", "Phone is already silent or vibrate. Skipping.")
-            dbHelper.addLog("Skipped: Phone already in silent/vibrate")
-            return
-        }
-
-        val currentVolume = audioManager.getStreamVolume(AudioManager.STREAM_RING)
-        Log.d("ScheduleReceiver", "Current ring volume: $currentVolume")
+        val homeSsids = preferenceHelper.homeWifiSsids.map { normalizeSsid(it) }
         
-        preferenceHelper.prevRingVolume = currentVolume
-        preferenceHelper.prevRingerMode = currentRingerMode
+        if (homeSsids.isNotEmpty()) {
+            if (homeSsids.any { it.equals(currentSsid, ignoreCase = true) }) {
+                dbHelper.addLog("Check: Home Wi-Fi detected ($currentSsid)")
+                applyUnmute(audioManager, preferenceHelper, dbHelper, "Home Override")
+                return
+            } else {
+                val ssidDisplay = if (currentSsid.isEmpty()) "Disconnected" else currentSsid
+                dbHelper.addLog("Check: Not on Home Wi-Fi ($ssidDisplay)")
+            }
+        }
 
-        try {
-            audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
-            Log.i("ScheduleReceiver", "SUCCESS: Set ringer mode to SILENT")
-            dbHelper.addLog("Active: Muted phone")
-        } catch (e: SecurityException) {
-            Log.e("ScheduleReceiver", "ERROR: Not allowed to change ringer mode", e)
-            dbHelper.addLog("Error: Missing Notification Policy permission")
+        // STEP 3: WORK LOCATION CHECK
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        val isSystemGpsOn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) locationManager.isLocationEnabled else locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        val gpsStatus = if (isSystemGpsOn) "ON" else "OFF"
+
+        if (!preferenceHelper.isGeofencingEnabled) {
+            dbHelper.addLog("Check: Location Restriction is OFF (GPS is $gpsStatus)")
+            applyMute(audioManager, preferenceHelper, dbHelper)
+            return
+        }
+
+        // STEP 4: GEOFENCING ON -> CHECK LOCATION
+        dbHelper.addLog("Check: Location Restriction is ON (GPS is $gpsStatus)")
+        val currentLoc = getCurrentLocation(context)
+        if (currentLoc == null) {
+            dbHelper.addLog("Result: Location unavailable (Muting for safety)")
+            applyMute(audioManager, preferenceHelper, dbHelper)
+        } else {
+            val dist = calculateDistance(
+                currentLoc.first, currentLoc.second,
+                preferenceHelper.workLat.toDouble(), preferenceHelper.workLng.toDouble()
+            )
+            val distInt = dist.toInt()
+            if (dist <= preferenceHelper.geofenceRadius) {
+                dbHelper.addLog("Result: At Work Area (${distInt}m) -> MUTE")
+                applyMute(audioManager, preferenceHelper, dbHelper)
+            } else {
+                dbHelper.addLog("Result: Outside Work Area (${distInt}m) -> UNMUTE")
+                applyUnmute(audioManager, preferenceHelper, dbHelper, "Not at Office")
+            }
         }
     }
 
-    private fun handleUnmuteAction(audioManager: AudioManager, preferenceHelper: PreferenceHelper, dbHelper: LogDatabaseHelper) {
-        val prevMode = preferenceHelper.prevRingerMode
-        val prevVolume = preferenceHelper.prevRingVolume
-        Log.d("ScheduleReceiver", "Restoring state - Mode: $prevMode, Volume: $prevVolume")
-
-        if (prevMode != -1) {
+    private fun applyMute(audioManager: AudioManager, preferenceHelper: PreferenceHelper, dbHelper: LogDatabaseHelper) {
+        if (audioManager.ringerMode != AudioManager.RINGER_MODE_SILENT) {
+            preferenceHelper.prevRingVolume = audioManager.getStreamVolume(AudioManager.STREAM_RING)
+            preferenceHelper.prevRingerMode = audioManager.ringerMode
             try {
-                audioManager.ringerMode = prevMode
-                Log.i("ScheduleReceiver", "Restored ringer mode to $prevMode")
-                dbHelper.addLog("Active: Unmuted phone (Restored mode $prevMode)")
-            } catch (e: SecurityException) {
-                Log.e("ScheduleReceiver", "Not allowed to change ringer mode", e)
-                dbHelper.addLog("Error: Could not restore ringer mode")
-            }
-        } else {
-            try {
-                audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
-                Log.i("ScheduleReceiver", "Fallback: Set ringer mode to NORMAL")
-                dbHelper.addLog("Active: Unmuted phone (Fallback to Normal)")
-            } catch (e: SecurityException) {
-                 Log.e("ScheduleReceiver", "Not allowed to change ringer mode", e)
-                 dbHelper.addLog("Error: Could not set ringer mode to Normal")
+                audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
+                dbHelper.addLog("Active: Muted by Schedule")
+            } catch (e: Exception) {
+                dbHelper.addLog("Error: Missing DND Permission")
             }
         }
+    }
 
-        if (prevVolume != -1) {
+    private fun applyUnmute(audioManager: AudioManager, preferenceHelper: PreferenceHelper, dbHelper: LogDatabaseHelper, reason: String) {
+        if (audioManager.ringerMode != AudioManager.RINGER_MODE_NORMAL) {
+            val prevMode = preferenceHelper.prevRingerMode
+            val prevVol = preferenceHelper.prevRingVolume
             try {
-                audioManager.setStreamVolume(AudioManager.STREAM_RING, prevVolume, 0)
-                Log.i("ScheduleReceiver", "Restored ring volume to $prevVolume")
-            } catch (e: SecurityException) {
-                Log.e("ScheduleReceiver", "Not allowed to change volume", e)
+                if (prevMode != -1) {
+                    audioManager.ringerMode = prevMode
+                    if (prevVol != -1) audioManager.setStreamVolume(AudioManager.STREAM_RING, prevVol, 0)
+                } else {
+                    audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
+                }
+                dbHelper.addLog("Active: Unmuted ($reason)")
+            } catch (e: Exception) {
+                dbHelper.addLog("Error: Sound restoration failed")
             }
+            preferenceHelper.prevRingerMode = -1
+            preferenceHelper.prevRingVolume = -1
         }
-        
-        preferenceHelper.prevRingerMode = -1
-        preferenceHelper.prevRingVolume = -1
+    }
+
+    private fun isCurrentTimeInMuteWindow(prefs: PreferenceHelper): Boolean {
+        val now = Calendar.getInstance()
+        val currMin = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+        val startMin = prefs.muteHour * 60 + prefs.muteMinute
+        val endMin = prefs.unmuteHour * 60 + prefs.unmuteMinute
+        return if (startMin < endMin) currMin in startMin until endMin else currMin >= startMin || currMin < endMin
     }
 
     private fun handlePreMuteAction(context: Context, preferenceHelper: PreferenceHelper) {
-        Log.i("ScheduleReceiver", "Sending pre-mute notification.")
+        val todayStr = "${Calendar.getInstance().get(Calendar.YEAR)}-${Calendar.getInstance().get(Calendar.DAY_OF_YEAR)}"
+        preferenceHelper.lastPreMuteDate = todayStr
         val dbHelper = LogDatabaseHelper(context)
         dbHelper.addLog("Notified: Silent mode in 10 mins")
-        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "ringer_scheduler_pre_mute"
-
+        val nm = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val chId = "ringer_scheduler_silent_notif"
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelId, "Scheduler Alerts", NotificationManager.IMPORTANCE_HIGH)
-            notificationManager.createNotificationChannel(channel)
+            nm.createNotificationChannel(NotificationChannel(chId, "Scheduler Alerts", NotificationManager.IMPORTANCE_LOW))
         }
-
-        val skipIntent = Intent(context, ScheduleReceiver::class.java).apply {
-            action = Constants.ACTION_SKIP_MUTE
-        }
-        val skipPendingIntent = PendingIntent.getBroadcast(
-            context, 0, skipIntent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-
-        val notification = NotificationCompat.Builder(context, channelId)
+        val notif = NotificationCompat.Builder(context, chId)
             .setSmallIcon(R.mipmap.ic_launcher)
             .setContentTitle("Work Scheduler")
-            .setContentText("Silent mode starting in 10 mins. Skip for today?")
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setContentText("Silent mode will start in 10 minutes")
+            .setPriority(NotificationCompat.PRIORITY_LOW)
             .setAutoCancel(true)
-            .addAction(0, "Skip", skipPendingIntent)
             .build()
-
-        notificationManager.notify(200, notification)
+        nm.notify(200, notif)
     }
 
     private fun getCurrentWifiSsid(context: Context): String? {
-        val hasFine = context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        val hasCoarse = context.checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-        Log.d("ScheduleReceiver", "Permissions - Fine: $hasFine, Coarse: $hasCoarse")
-        
-        if (!hasFine && !hasCoarse) {
-            Log.w("ScheduleReceiver", "Location permission missing.")
-            return null
-        }
-        
-        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
-        val isGpsEnabled = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-            locationManager.isLocationEnabled
-        } else {
-            @Suppress("DEPRECATION")
-            locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-        }
-        Log.d("ScheduleReceiver", "GPS Enabled: $isGpsEnabled")
-
         val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         
-        // Strategy 1: ConnectivityManager (Modern)
+        // Strategy 1: Modern API (API 29+)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             val network = connectivityManager.activeNetwork
             val capabilities = connectivityManager.getNetworkCapabilities(network)
-            Log.d("ScheduleReceiver", "Network: $network, Capabilities: ${capabilities != null}")
-            
             if (capabilities != null && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                // IMPORTANT: On Android 12+, we must try to get WifiInfo from transportInfo
                 val transportInfo = capabilities.transportInfo
-                Log.d("ScheduleReceiver", "TransportInfo type: ${transportInfo?.javaClass?.simpleName}")
                 if (transportInfo is WifiInfo) {
                     val ssid = stripQuotes(transportInfo.ssid)
-                    if (ssid != null && ssid != "<unknown ssid>") {
-                        Log.d("ScheduleReceiver", "SSID from ConnectivityManager: $ssid")
-                        return ssid
-                    }
+                    if (ssid != null && ssid != "<unknown ssid>") return ssid
                 }
             }
         }
 
-        // Strategy 2: WifiManager (Legacy/Fallback)
+        // Strategy 2: Legacy WifiManager (More reliable on many devices even with new APIs)
         val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+        @Suppress("DEPRECATION")
         val wifiInfo = wifiManager.connectionInfo
-        Log.d("ScheduleReceiver", "WifiInfo from WifiManager: ${wifiInfo != null}, SSID: ${wifiInfo?.ssid}")
-        
         if (wifiInfo != null && wifiInfo.networkId != -1) {
             val ssid = stripQuotes(wifiInfo.ssid)
-            if (ssid != null && ssid != "<unknown ssid>") {
-                Log.d("ScheduleReceiver", "SSID from WifiManager: $ssid")
-                return ssid
+            if (ssid != null && ssid != "<unknown ssid>") return ssid
+        }
+
+        // Strategy 3: Check via ConnectivityManager NetworkInfo (Last resort fallback)
+        @Suppress("DEPRECATION")
+        val activeNetworkInfo = connectivityManager.activeNetworkInfo
+        if (activeNetworkInfo != null && activeNetworkInfo.isConnected && activeNetworkInfo.type == ConnectivityManager.TYPE_WIFI) {
+            val extraInfo = activeNetworkInfo.extraInfo
+            if (extraInfo != null) {
+                return stripQuotes(extraInfo)
             }
         }
 
@@ -263,37 +230,46 @@ class ScheduleReceiver : BroadcastReceiver() {
         if (context.checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return null
         }
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
+        val flc = LocationServices.getFusedLocationProviderClient(context)
         return try {
-            val task = fusedLocationClient.lastLocation
-            val location = Tasks.await(task, 5, TimeUnit.SECONDS)
-            if (location != null) {
-                Pair(location.latitude, location.longitude)
+            // 1. Try last known location first (Zero energy cost)
+            val lastTask = flc.lastLocation
+            val lastLoc = Tasks.await(lastTask, 3, TimeUnit.SECONDS)
+            if (lastLoc != null && (System.currentTimeMillis() - lastLoc.time) < 300_000) {
+                return Pair(lastLoc.latitude, lastLoc.longitude)
+            }
+
+            // 2. Request fresh location with HIGH ACCURACY
+            val req = CurrentLocationRequest.Builder()
+                .setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                .setMaxUpdateAgeMillis(30_000)
+                .build()
+            
+            val freshTask = flc.getCurrentLocation(req, null)
+            val freshLoc = Tasks.await(freshTask, 15, TimeUnit.SECONDS) // Wait up to 15s for GPS warm-up
+            
+            if (freshLoc != null) {
+                Pair(freshLoc.latitude, freshLoc.longitude)
             } else {
+                Log.w("ScheduleReceiver", "Location engine returned null")
                 null
             }
         } catch (e: Exception) {
-            Log.e("ScheduleReceiver", "Error getting location", e)
+            val dbHelper = LogDatabaseHelper(context)
+            dbHelper.addLog("Debug: GPS Error (${e.javaClass.simpleName})")
             null
         }
     }
 
     private fun calculateDistance(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Float {
-        val results = FloatArray(1)
-        Location.distanceBetween(lat1, lon1, lat2, lon2, results)
-        return results[0]
+        val res = FloatArray(1)
+        Location.distanceBetween(lat1, lon1, lat2, lon2, res)
+        return res[0]
     }
 
-    private fun normalizeSsid(ssid: String): String {
-        return ssid.replace("\"", "").trim()
-    }
-
-    private fun stripQuotes(ssid: String?): String? {
-        if (ssid == null || ssid == "<unknown ssid>") return null
-        return if (ssid.startsWith("\"") && ssid.endsWith("\"") && ssid.length >= 2) {
-            ssid.substring(1, ssid.length - 1)
-        } else {
-            ssid
-        }
+    private fun normalizeSsid(s: String): String = s.replace("\"", "").trim()
+    private fun stripQuotes(s: String?): String? {
+        if (s == null || s == "<unknown ssid>") return null
+        return if (s.startsWith("\"") && s.endsWith("\"")) s.substring(1, s.length - 1) else s
     }
 }

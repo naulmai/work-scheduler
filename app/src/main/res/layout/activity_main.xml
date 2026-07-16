@@ -243,21 +243,65 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:padding="20dp">
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <RelativeLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="LATEST ACTIVITY"
-                        android:textSize="11sp"
-                        android:textStyle="bold"
-                        android:letterSpacing="0.1"
-                        android:layout_marginBottom="12dp"
-                        android:textColor="?android:attr/textColorSecondary" />
+                        android:layout_marginBottom="12dp">
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:text="LATEST ACTIVITY"
+                            android:textSize="11sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.1"
+                            android:textColor="?android:attr/textColorSecondary" />
+
+                        <LinearLayout
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnRefreshLogs"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:insetLeft="0dp"
+                                android:insetTop="0dp"
+                                android:insetRight="0dp"
+                                android:insetBottom="0dp"
+                                app:icon="@drawable/ic_refresh"
+                                app:iconSize="18dp"
+                                app:iconTint="@color/accent_purple"
+                                android:minWidth="0dp" />
+
+                            <com.google.android.material.button.MaterialButton
+                                android:id="@+id/btnViewAllLogs"
+                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="VIEW ALL"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:textColor="@color/accent_purple"
+                                android:insetTop="0dp"
+                                android:insetBottom="0dp"
+                                android:minWidth="0dp"
+                                android:minHeight="0dp"
+                                android:layout_marginStart="4dp"
+                                android:padding="4dp" />
+                        </LinearLayout>
+                    </RelativeLayout>
                     <TextView
                         android:id="@+id/tvLatestLog"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="No activity recorded"
-                        android:textSize="14sp"
+                        android:textSize="13sp"
+                        android:lineSpacingExtra="4dp"
                         android:textColor="?android:attr/textColorPrimary" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
@@ -280,72 +324,120 @@
                         android:textSize="11sp"
                         android:textStyle="bold"
                         android:letterSpacing="0.1"
-                        android:layout_marginBottom="16dp"
+                        android:layout_marginBottom="20dp"
                         android:textColor="?android:attr/textColorSecondary" />
 
-                    <!-- WiFi -->
-                    <RelativeLayout
+                    <!-- WiFi Row -->
+                    <LinearLayout
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-                        <EditText
-                            android:id="@+id/etWifiSsid"
-                            android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_wifi"
+                            app:tint="@color/accent_purple"
+                            android:alpha="0.8" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_toStartOf="@+id/btnPickWifi"
-                            android:layout_centerVertical="true"
-                            android:hint="Home Wi-Fi Name"
-                            android:background="@android:color/transparent"
-                            android:textSize="16sp"
-                            android:textStyle="bold"
-                            android:textColor="?android:attr/textColorPrimary"
-                            android:paddingVertical="8dp" />
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="16dp"
+                            android:layout_marginEnd="12dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Home Wi-Fi"
+                                android:textSize="11sp"
+                                android:textStyle="bold"
+                                android:textColor="?android:attr/textColorSecondary" />
+                            <EditText
+                                android:id="@+id/etWifiSsid"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:hint="Not set"
+                                android:background="@android:color/transparent"
+                                android:textSize="15sp"
+                                android:textColor="?android:attr/textColorPrimary"
+                                android:textColorHint="?android:attr/textColorPrimary"
+                                android:paddingVertical="2dp"
+                                android:focusable="false"
+                                android:clickable="false" />
+                        </LinearLayout>
+
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnPickWifi"
                             style="@style/ActionBtn"
                             android:layout_width="wrap_content"
                             android:layout_height="32dp"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
                             android:text="PICK"
                             android:textColor="@color/accent_purple"
                             app:strokeColor="@color/accent_purple"
                             android:minWidth="0dp"
                             android:paddingHorizontal="12dp" />
+
                         <ProgressBar
                             android:id="@+id/pbWifiScan"
                             style="?android:attr/progressBarStyleSmall"
                             android:layout_width="20dp"
                             android:layout_height="20dp"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
                             android:visibility="gone" />
-                    </RelativeLayout>
+                    </LinearLayout>
 
                     <View
                         android:layout_width="match_parent"
                         android:layout_height="1dp"
                         android:background="?android:attr/textColorSecondary"
-                        android:alpha="0.1"
-                        android:layout_marginVertical="12dp" />
+                        android:alpha="0.08"
+                        android:layout_marginVertical="16dp" />
 
-                    <!-- Location -->
+                    <!-- Location Row -->
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="vertical">
+
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
                             android:gravity="center_vertical">
-                            <TextView
-                                android:id="@+id/tvWorkLocation"
+
+                            <ImageView
+                                android:layout_width="20dp"
+                                android:layout_height="20dp"
+                                android:src="@drawable/ic_location"
+                                app:tint="@color/accent_purple"
+                                android:alpha="0.8" />
+
+                            <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
-                                android:text="Work GPS: Not set"
-                                android:textSize="15sp"
-                                android:textColor="?android:attr/textColorPrimary" />
+                                android:orientation="vertical"
+                                android:layout_marginStart="16dp"
+                                android:layout_marginEnd="12dp">
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="Work Location"
+                                    android:textSize="11sp"
+                                    android:textStyle="bold"
+                                    android:textColor="?android:attr/textColorSecondary" />
+                                <TextView
+                                    android:id="@+id/tvWorkLocation"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Not set"
+                                    android:textSize="15sp"
+                                    android:textColor="?android:attr/textColorPrimary"
+                                    android:paddingVertical="2dp" />
+                            </LinearLayout>
+
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btnSetWorkLocation"
                                 style="@style/ActionBtn"
@@ -357,19 +449,32 @@
                                 android:minWidth="0dp"
                                 android:paddingHorizontal="12dp" />
                         </LinearLayout>
-                        <com.google.android.material.switchmaterial.SwitchMaterial
-                            android:id="@+id/switchGeofencing"
+
+                        <RelativeLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Require this location"
-                            android:textColor="?android:attr/textColorSecondary"
-                            android:textSize="14sp" />
+                            android:layout_marginTop="12dp"
+                            android:layout_marginStart="36dp">
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_centerVertical="true"
+                                android:text="Restrict schedule to this area"
+                                android:textSize="13sp"
+                                android:textColor="?android:attr/textColorSecondary" />
+                            <com.google.android.material.switchmaterial.SwitchMaterial
+                                android:id="@+id/switchGeofencing"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_alignParentEnd="true"
+                                android:layout_centerVertical="true"
+                                app:switchPadding="0dp" />
+                        </RelativeLayout>
                     </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Sync & Security -->
+            <!-- Cloud Section -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

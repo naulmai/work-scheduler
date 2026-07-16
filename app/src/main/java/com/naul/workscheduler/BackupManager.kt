@@ -23,7 +23,7 @@ class BackupManager(private val context: Context) {
             "muteMinute" to preferenceHelper.muteMinute,
             "unmuteHour" to preferenceHelper.unmuteHour,
             "unmuteMinute" to preferenceHelper.unmuteMinute,
-            "homeWifiSsid" to preferenceHelper.homeWifiSsid,
+            "homeWifiSsids" to preferenceHelper.homeWifiSsids.toList(),
             "activeDays" to preferenceHelper.activeDays.toList(),
             "workLat" to preferenceHelper.workLat,
             "workLng" to preferenceHelper.workLng,
@@ -57,7 +57,11 @@ class BackupManager(private val context: Context) {
                     preferenceHelper.muteMinute = (document.getLong("muteMinute") ?: 30L).toInt()
                     preferenceHelper.unmuteHour = (document.getLong("unmuteHour") ?: 18L).toInt()
                     preferenceHelper.unmuteMinute = (document.getLong("unmuteMinute") ?: 0L).toInt()
-                    preferenceHelper.homeWifiSsid = document.getString("homeWifiSsid") ?: ""
+                    
+                    val ssids = document.get("homeWifiSsids") as? List<String>
+                    if (ssids != null) {
+                        preferenceHelper.homeWifiSsids = ssids.toSet()
+                    }
                     
                     val days = document.get("activeDays") as? List<String>
                     if (days != null) {

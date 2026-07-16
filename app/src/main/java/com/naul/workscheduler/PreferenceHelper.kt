@@ -22,9 +22,9 @@ class PreferenceHelper(context: Context) {
         get() = prefs.getInt(Constants.KEY_UNMUTE_MINUTE, 0)
         set(value) = prefs.edit().putInt(Constants.KEY_UNMUTE_MINUTE, value).apply()
 
-    var homeWifiSsid: String
-        get() = prefs.getString(Constants.KEY_HOME_WIFI_SSID, "") ?: ""
-        set(value) = prefs.edit().putString(Constants.KEY_HOME_WIFI_SSID, value).apply()
+    var homeWifiSsids: Set<String>
+        get() = prefs.getStringSet(Constants.KEY_HOME_WIFI_SSIDS, emptySet()) ?: emptySet()
+        set(value) = prefs.edit().putStringSet(Constants.KEY_HOME_WIFI_SSIDS, value).apply()
 
     var isScheduleEnabled: Boolean
         get() = prefs.getBoolean(Constants.KEY_SCHEDULE_ENABLED, false)
@@ -41,10 +41,6 @@ class PreferenceHelper(context: Context) {
     var activeDays: Set<String>
         get() = prefs.getStringSet(Constants.KEY_ACTIVE_DAYS, setOf("2", "3", "4", "5", "6")) ?: setOf("2", "3", "4", "5", "6")
         set(value) = prefs.edit().putStringSet(Constants.KEY_ACTIVE_DAYS, value).apply()
-
-    var skipNextMute: Boolean
-        get() = prefs.getBoolean(Constants.KEY_SKIP_NEXT_MUTE, false)
-        set(value) = prefs.edit().putBoolean(Constants.KEY_SKIP_NEXT_MUTE, value).apply()
 
     var workLat: Float
         get() = prefs.getFloat(Constants.KEY_WORK_LAT, 0f)
@@ -65,4 +61,12 @@ class PreferenceHelper(context: Context) {
     var isDarkMode: Boolean
         get() = prefs.getBoolean(Constants.KEY_IS_DARK_MODE, true)
         set(value) = prefs.edit().putBoolean(Constants.KEY_IS_DARK_MODE, value).apply()
+
+    var lastPreMuteDate: String
+        get() = prefs.getString("last_pre_mute_date", "") ?: ""
+        set(value) = prefs.edit().putString("last_pre_mute_date", value).apply()
+
+    var isPreMuteEnabled: Boolean
+        get() = prefs.getBoolean(Constants.KEY_PRE_MUTE_ENABLED, true)
+        set(value) = prefs.edit().putBoolean(Constants.KEY_PRE_MUTE_ENABLED, value).apply()
 }

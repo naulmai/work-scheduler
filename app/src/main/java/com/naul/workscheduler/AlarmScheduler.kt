@@ -33,22 +33,41 @@ class AlarmScheduler(private val context: Context) {
         )
 
         // Schedule Pre-mute notification 10 minutes before
-        val muteCalendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, preferenceHelper.muteHour)
-            set(Calendar.MINUTE, preferenceHelper.muteMinute)
-            set(Calendar.SECOND, 0)
+        if (preferenceHelper.isPreMuteEnabled) {
+            val muteCalendar = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, preferenceHelper.muteHour)
+                set(Calendar.MINUTE, preferenceHelper.muteMinute)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+            }
+            
+            val now = System.currentTimeMillis()
+            val muteTime = muteCalendar.timeInMillis
+            val preMuteTime = muteTime - (10 * 60 * 1000)
+            
+            val todayStr = "${Calendar.getInstance().get(Calendar.YEAR)}-${Calendar.getInstance().get(Calendar.DAY_OF_YEAR)}"
+
+            // Battery Optimizer: If we are currently in the 10-minute window before muting, 
+            // show notification immediately but ONLY IF not shown today already.
+            if (now in preMuteTime until muteTime && preferenceHelper.lastPreMuteDate != todayStr) {
+                context.sendBroadcast(Intent(context, ScheduleReceiver::class.java).apply {
+                    action = Constants.ACTION_PRE_MUTE
+                })
+            }
+            
+            val preMuteCalendar = Calendar.getInstance().apply {
+                timeInMillis = preMuteTime
+            }
+            
+            scheduleAlarm(
+                Constants.ACTION_PRE_MUTE,
+                Constants.REQUEST_CODE_PRE_MUTE,
+                preMuteCalendar.get(Calendar.HOUR_OF_DAY),
+                preMuteCalendar.get(Calendar.MINUTE)
+            )
+        } else {
+            cancelAlarm(Constants.ACTION_PRE_MUTE, Constants.REQUEST_CODE_PRE_MUTE)
         }
-        
-        val preMuteCalendar = (muteCalendar.clone() as Calendar).apply {
-            add(Calendar.MINUTE, -10)
-        }
-        
-        scheduleAlarm(
-            Constants.ACTION_PRE_MUTE,
-            Constants.REQUEST_CODE_PRE_MUTE,
-            preMuteCalendar.get(Calendar.HOUR_OF_DAY),
-            preMuteCalendar.get(Calendar.MINUTE)
-        )
 
         scheduleAlarm(
             Constants.ACTION_UNMUTE,
@@ -94,27 +113,42 @@ class AlarmScheduler(private val context: Context) {
             calendar.add(Calendar.DAY_OF_YEAR, 1)
         }
 
+        val triggerTime = calendar.timeInMillis
+        
         try {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
-            Log.i("AlarmScheduler", "Scheduled $action for ${calendar.time}")
-        } catch (e: SecurityException) {
-            Log.e("AlarmScheduler", "SecurityException when scheduling exact alarm", e)
-            // Fallback
-            alarmManager.setExact(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                } else {
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        triggerTime,
+                        pendingIntent
+                    )
+                }
+            } else {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    triggerTime,
+                    pendingIntent
+                )
+            }
+            Log.i("AlarmScheduler", "Scheduled $action for ${calendar.time} (High Accuracy)")
+        } catch (e: Exception) {
+            // Fallback for safety
+            alarmManager.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerTime, pendingIntent)
+            Log.e("AlarmScheduler", "Fallback used for $action", e)
         }
     }
 
     fun cancelAlarms() {
         cancelAlarm(Constants.ACTION_MUTE, Constants.REQUEST_CODE_MUTE)
         cancelAlarm(Constants.ACTION_UNMUTE, Constants.REQUEST_CODE_UNMUTE)
+        cancelAlarm(Constants.ACTION_PRE_MUTE, Constants.REQUEST_CODE_PRE_MUTE)
         Log.i("AlarmScheduler", "All alarms cancelled")
     }
 

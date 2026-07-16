@@ -49,6 +49,12 @@
             android:label="UI Preview"
             android:theme="@style/Theme.WorkScheduler" />
 
+        <activity
+            android:name=".HistoryActivity"
+            android:exported="false"
+            android:label="History"
+            android:theme="@style/Theme.WorkScheduler" />
+
         <receiver
             android:name=".ScheduleReceiver"
             android:exported="false" />

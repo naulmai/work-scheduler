@@ -10,7 +10,7 @@ import java.util.Locale
 
 data class ActivityLog(val id: Int, val timestamp: Long, val message: String)
 
-class LogDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+class LogDatabaseHelper(private val context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
 
     companion object {
         private const val DATABASE_NAME = "activity_logs.db"
@@ -41,6 +41,13 @@ class LogDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_N
         // Keep only last 50 logs to save space
         db.execSQL("DELETE FROM $TABLE_NAME WHERE $COLUMN_ID NOT IN (SELECT $COLUMN_ID FROM $TABLE_NAME ORDER BY $COLUMN_TIMESTAMP DESC LIMIT 50)")
         db.close()
+        
+        // Notify app to refresh UI
+        try {
+            val intent = android.content.Intent(Constants.ACTION_LOGS_UPDATED)
+            intent.setPackage(context.packageName)
+            context.sendBroadcast(intent)
+        } catch (e: Exception) {}
     }
 
     fun getAllLogs(): List<ActivityLog> {
