@@ -38,8 +38,11 @@ class ScheduleReceiver : BroadcastReceiver() {
 
         val calendar = Calendar.getInstance()
         val currentDay = calendar.get(Calendar.DAY_OF_WEEK).toString()
+        val dbHelper = LogDatabaseHelper(context)
+
         if (!preferenceHelper.activeDays.contains(currentDay)) {
             Log.i("ScheduleReceiver", "Today ($currentDay) is not an active day. Skipping.")
+            dbHelper.addLog("Skipped: Not an active day")
             // Reschedule for next check
             AlarmScheduler(context).scheduleAlarms()
             return
@@ -51,16 +54,18 @@ class ScheduleReceiver : BroadcastReceiver() {
             Constants.ACTION_MUTE -> {
                 if (preferenceHelper.skipNextMute) {
                     Log.i("ScheduleReceiver", "SkipNextMute is enabled. Skipping this mute action.")
+                    dbHelper.addLog("Skipped: User requested to skip")
                     preferenceHelper.skipNextMute = false
                 } else {
-                    handleMuteAction(context, audioManager, preferenceHelper)
+                    handleMuteAction(context, audioManager, preferenceHelper, dbHelper)
                 }
             }
-            Constants.ACTION_UNMUTE -> handleUnmuteAction(audioManager, preferenceHelper)
+            Constants.ACTION_UNMUTE -> handleUnmuteAction(audioManager, preferenceHelper, dbHelper)
             Constants.ACTION_PRE_MUTE -> handlePreMuteAction(context, preferenceHelper)
             Constants.ACTION_SKIP_MUTE -> {
                 preferenceHelper.skipNextMute = true
                 Log.i("ScheduleReceiver", "User requested to skip next mute.")
+                dbHelper.addLog("User skipped next mute action")
                 val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
                 notificationManager.cancel(200) // Cancel pre-mute notification
             }
@@ -71,13 +76,14 @@ class ScheduleReceiver : BroadcastReceiver() {
         alarmScheduler.scheduleAlarms()
     }
 
-    private fun handleMuteAction(context: Context, audioManager: AudioManager, preferenceHelper: PreferenceHelper) {
+    private fun handleMuteAction(context: Context, audioManager: AudioManager, preferenceHelper: PreferenceHelper, dbHelper: LogDatabaseHelper) {
         val homeSsid = normalizeSsid(preferenceHelper.homeWifiSsid)
         val currentSsid = normalizeSsid(getCurrentWifiSsid(context) ?: "")
 
         // Check 1: Home Wi-Fi Exception (If at home, skip muting regardless of other conditions)
         if (homeSsid.isNotEmpty() && currentSsid.equals(homeSsid, ignoreCase = true)) {
             Log.i("ScheduleReceiver", "At home (SSID: $currentSsid), skipping mute.")
+            dbHelper.addLog("Skipped: Connected to Home Wi-Fi ($currentSsid)")
             return
         }
 
@@ -98,6 +104,7 @@ class ScheduleReceiver : BroadcastReceiver() {
 
             if (!isAtWork) {
                 Log.i("ScheduleReceiver", "Not at work location. Skipping mute.")
+                dbHelper.addLog("Skipped: Not at work location")
                 return
             }
         }
@@ -107,6 +114,7 @@ class ScheduleReceiver : BroadcastReceiver() {
         Log.d("ScheduleReceiver", "Current ringer mode: $currentRingerMode")
         if (currentRingerMode == AudioManager.RINGER_MODE_SILENT || currentRingerMode == AudioManager.RINGER_MODE_VIBRATE) {
             Log.i("ScheduleReceiver", "Phone is already silent or vibrate. Skipping.")
+            dbHelper.addLog("Skipped: Phone already in silent/vibrate")
             return
         }
 
@@ -119,12 +127,14 @@ class ScheduleReceiver : BroadcastReceiver() {
         try {
             audioManager.ringerMode = AudioManager.RINGER_MODE_SILENT
             Log.i("ScheduleReceiver", "SUCCESS: Set ringer mode to SILENT")
+            dbHelper.addLog("Active: Muted phone")
         } catch (e: SecurityException) {
             Log.e("ScheduleReceiver", "ERROR: Not allowed to change ringer mode", e)
+            dbHelper.addLog("Error: Missing Notification Policy permission")
         }
     }
 
-    private fun handleUnmuteAction(audioManager: AudioManager, preferenceHelper: PreferenceHelper) {
+    private fun handleUnmuteAction(audioManager: AudioManager, preferenceHelper: PreferenceHelper, dbHelper: LogDatabaseHelper) {
         val prevMode = preferenceHelper.prevRingerMode
         val prevVolume = preferenceHelper.prevRingVolume
         Log.d("ScheduleReceiver", "Restoring state - Mode: $prevMode, Volume: $prevVolume")
@@ -133,15 +143,19 @@ class ScheduleReceiver : BroadcastReceiver() {
             try {
                 audioManager.ringerMode = prevMode
                 Log.i("ScheduleReceiver", "Restored ringer mode to $prevMode")
+                dbHelper.addLog("Active: Unmuted phone (Restored mode $prevMode)")
             } catch (e: SecurityException) {
                 Log.e("ScheduleReceiver", "Not allowed to change ringer mode", e)
+                dbHelper.addLog("Error: Could not restore ringer mode")
             }
         } else {
             try {
                 audioManager.ringerMode = AudioManager.RINGER_MODE_NORMAL
                 Log.i("ScheduleReceiver", "Fallback: Set ringer mode to NORMAL")
+                dbHelper.addLog("Active: Unmuted phone (Fallback to Normal)")
             } catch (e: SecurityException) {
                  Log.e("ScheduleReceiver", "Not allowed to change ringer mode", e)
+                 dbHelper.addLog("Error: Could not set ringer mode to Normal")
             }
         }
 
@@ -160,6 +174,8 @@ class ScheduleReceiver : BroadcastReceiver() {
 
     private fun handlePreMuteAction(context: Context, preferenceHelper: PreferenceHelper) {
         Log.i("ScheduleReceiver", "Sending pre-mute notification.")
+        val dbHelper = LogDatabaseHelper(context)
+        dbHelper.addLog("Notified: Silent mode in 10 mins")
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "ringer_scheduler_pre_mute"
 

@@ -49,6 +49,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var etWifiSsid: EditText
     private lateinit var switchSchedule: SwitchMaterial
     private lateinit var tvCurrentStatus: TextView
+    private lateinit var tvLatestLog: TextView
     private lateinit var cardStatus: com.google.android.material.card.MaterialCardView
     private lateinit var ivStatusIcon: ImageView
     private lateinit var btnGrantDnd: MaterialButton
@@ -65,6 +66,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnPickWifi: MaterialButton
     private lateinit var pbWifiScan: ProgressBar
     private lateinit var btnBatterySettings: MaterialButton
+    private lateinit var btnThemeToggle: MaterialButton
     
     private lateinit var tvCloudStatus: TextView
     private lateinit var btnBackup: MaterialButton
@@ -77,6 +79,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var preferenceHelper: PreferenceHelper
     private lateinit var alarmScheduler: AlarmScheduler
     private lateinit var backupManager: BackupManager
+    private lateinit var dbHelper: LogDatabaseHelper
     
     private val auth = FirebaseAuth.getInstance()
 
@@ -103,17 +106,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        preferenceHelper = PreferenceHelper(this)
+        
+        // Apply theme before super.onCreate
+        if (preferenceHelper.isDarkMode) {
+            setTheme(R.style.Theme_WorkScheduler)
+        } else {
+            setTheme(R.style.Theme_WorkScheduler_Light)
+        }
+        
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        preferenceHelper = PreferenceHelper(this)
         alarmScheduler = AlarmScheduler(this)
         backupManager = BackupManager(this)
+        dbHelper = LogDatabaseHelper(this)
 
         initViews()
         setupUI()
         checkPermissions()
         updateCloudUI()
+        updateLatestLog()
     }
 
     private fun initViews() {
@@ -122,6 +135,7 @@ class MainActivity : AppCompatActivity() {
         etWifiSsid = findViewById(R.id.etWifiSsid)
         switchSchedule = findViewById(R.id.switchSchedule)
         tvCurrentStatus = findViewById(R.id.tvCurrentStatus)
+        tvLatestLog = findViewById(R.id.tvLatestLog)
         cardStatus = findViewById(R.id.cardStatus)
         ivStatusIcon = findViewById(R.id.ivStatusIcon)
         btnGrantDnd = findViewById(R.id.btnGrantDnd)
@@ -138,6 +152,7 @@ class MainActivity : AppCompatActivity() {
         btnPickWifi = findViewById(R.id.btnPickWifi)
         pbWifiScan = findViewById(R.id.pbWifiScan)
         btnBatterySettings = findViewById(R.id.btnBatterySettings)
+        btnThemeToggle = findViewById(R.id.btnThemeToggle)
         tvCloudStatus = findViewById(R.id.tvCloudStatus)
         btnBackup = findViewById(R.id.btnBackup)
         btnRestore = findViewById(R.id.btnRestore)
@@ -197,6 +212,11 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(this, "Schedule Disabled", Toast.LENGTH_SHORT).show()
             }
             updateStatusCard()
+        }
+
+        btnThemeToggle.setOnClickListener {
+            preferenceHelper.isDarkMode = !preferenceHelper.isDarkMode
+            recreate() // Restart activity to apply new theme
         }
 
         setupDayChips()
@@ -400,21 +420,22 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun updateStatusCard() {
+        val isDark = preferenceHelper.isDarkMode
+        val activeColor = ContextCompat.getColor(this, R.color.accent_teal)
+        val disabledColor = if (isDark) ContextCompat.getColor(this, R.color.text_secondary_dark) 
+                           else ContextCompat.getColor(this, R.color.text_secondary_light)
+        
         if (preferenceHelper.isScheduleEnabled) {
             tvCurrentStatus.text = "Scheduler is Active"
-            tvCurrentStatus.setTextColor(ContextCompat.getColor(this, R.color.success_green))
-            cardStatus.setCardBackgroundColor(ContextCompat.getColor(this, R.color.status_active_bg))
-            cardStatus.strokeColor = ContextCompat.getColor(this, R.color.success_green)
+            tvCurrentStatus.setTextColor(activeColor)
             ivStatusIcon.setImageResource(R.drawable.ic_check_circle)
-            ivStatusIcon.setColorFilter(ContextCompat.getColor(this, R.color.success_green))
+            ivStatusIcon.setColorFilter(activeColor)
             ivStatusIcon.alpha = 1.0f
         } else {
             tvCurrentStatus.text = "Scheduler is Disabled"
-            tvCurrentStatus.setTextColor(ContextCompat.getColor(this, R.color.text_error))
-            cardStatus.setCardBackgroundColor(ContextCompat.getColor(this, R.color.surface))
-            cardStatus.strokeColor = ContextCompat.getColor(this, R.color.card_stroke)
+            tvCurrentStatus.setTextColor(disabledColor)
             ivStatusIcon.setImageResource(R.drawable.ic_check_circle)
-            ivStatusIcon.setColorFilter(ContextCompat.getColor(this, R.color.text_error))
+            ivStatusIcon.setColorFilter(disabledColor)
             ivStatusIcon.alpha = 0.5f
         }
     }
@@ -686,6 +707,17 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         updatePermissionStatus()
+        updateLatestLog()
+    }
+
+    private fun updateLatestLog() {
+        val logs = dbHelper.getAllLogs()
+        if (logs.isNotEmpty()) {
+            val latest = logs[0]
+            val sdf = java.text.SimpleDateFormat("HH:mm", java.util.Locale.getDefault())
+            val time = sdf.format(java.util.Date(latest.timestamp))
+            tvLatestLog.text = "[$time] ${latest.message}"
+        }
     }
 
     override fun onPause() {

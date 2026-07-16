@@ -61,4 +61,8 @@ class PreferenceHelper(context: Context) {
     var isGeofencingEnabled: Boolean
         get() = prefs.getBoolean(Constants.KEY_GEOFENCING_ENABLED, false)
         set(value) = prefs.edit().putBoolean(Constants.KEY_GEOFENCING_ENABLED, value).apply()
+
+    var isDarkMode: Boolean
+        get() = prefs.getBoolean(Constants.KEY_IS_DARK_MODE, true)
+        set(value) = prefs.edit().putBoolean(Constants.KEY_IS_DARK_MODE, value).apply()
 }

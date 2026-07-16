@@ -27,4 +27,5 @@ object Constants {
     const val KEY_WORK_LNG = "work_lng"
     const val KEY_GEOFENCE_RADIUS = "geofence_radius"
     const val KEY_GEOFENCING_ENABLED = "geofencing_enabled"
+    const val KEY_IS_DARK_MODE = "is_dark_mode"
 }

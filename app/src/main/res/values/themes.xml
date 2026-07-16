@@ -1,47 +1,59 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Base application theme. -->
     <style name="Theme.WorkScheduler" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Primary brand color. -->
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorPrimaryVariant">@color/primary_variant</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <!-- Secondary brand color. -->
-        <item name="colorSecondary">@color/secondary</item>
-        <item name="colorSecondaryVariant">@color/secondary</item>
-        <item name="colorOnSecondary">@color/black</item>
+        <!-- Main Palette -->
+        <item name="colorPrimary">@color/accent_purple</item>
+        <item name="colorSecondary">@color/accent_teal</item>
 
-        <!-- UI Colors -->
-        <item name="android:windowBackground">@color/background</item>
-        <item name="android:statusBarColor">@color/background</item>
-        <item name="android:navigationBarColor">@color/background</item>
+        <!-- Semantic Colors Mapping (Dark Default) -->
+        <item name="android:windowBackground">@color/bg_dark</item>
+        <item name="android:textColorPrimary">@color/text_primary_dark</item>
+        <item name="android:textColorSecondary">@color/text_secondary_dark</item>
 
-        <!-- Material Component Styles -->
-        <item name="materialCardViewStyle">@style/CustomCardView</item>
-        <item name="chipStyle">@style/CustomChip</item>
+        <item name="materialCardViewStyle">@style/CustomCardStyle</item>
+    </style>
+
+    <!-- Theme for Light Mode -->
+    <style name="Theme.WorkScheduler.Light" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/accent_purple</item>
+        <item name="colorSecondary">@color/accent_teal</item>
+
+        <!-- Semantic Colors Mapping -->
+        <item name="android:windowBackground">@color/bg_light</item>
+        <item name="android:textColorPrimary">@color/text_primary_light</item>
+        <item name="android:textColorSecondary">@color/text_secondary_light</item>
+
+        <item name="materialCardViewStyle">@style/CustomCardStyle.Light</item>
+    </style>
+
+    <style name="CustomCardStyle" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">24dp</item>
+        <item name="cardElevation">0dp</item>
+        <item name="cardBackgroundColor">@color/surface_dark</item>
+        <item name="strokeColor">@color/stroke_dark</item>
+        <item name="strokeWidth">1dp</item>
+    </style>
+
+    <style name="CustomCardStyle.Light" parent="CustomCardStyle">
+        <item name="cardBackgroundColor">@color/surface_light</item>
+        <item name="strokeColor">@color/stroke_light</item>
+        <item name="cardElevation">2dp</item>
+    </style>
+
+    <style name="ModernChip" parent="Widget.MaterialComponents.Chip.Filter">
+        <item name="chipCornerRadius">12dp</item>
+        <item name="chipBackgroundColor">@color/stroke_dark</item>
+        <item name="android:textColor">@color/text_primary_dark</item>
+        <item name="checkedIconVisible">false</item>
+        <item name="chipStrokeWidth">0dp</item>
     </style>
 
     <style name="CustomTimePickerTheme" parent="ThemeOverlay.MaterialComponents.TimePicker">
-        <item name="colorPrimary">@color/primary</item>
-        <item name="colorSurface">@color/surface</item>
+        <item name="colorPrimary">@color/accent_purple</item>
+        <item name="colorSurface">@color/surface_dark</item>
         <item name="colorOnSurface">@color/white</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="android:windowBackground">@android:color/transparent</item>
-        <item name="colorContainer">@color/surface</item>
-        <item name="colorOnContainer">@color/white</item>
-    </style>
-
-    <style name="CustomCardView" parent="Widget.MaterialComponents.CardView">
-        <item name="cardCornerRadius">20dp</item>
-        <item name="cardElevation">0dp</item>
-        <item name="cardBackgroundColor">@color/surface</item>
-        <item name="strokeColor">@color/card_stroke</item>
-        <item name="strokeWidth">1.5dp</item>
-    </style>
-
-    <style name="CustomChip" parent="Widget.MaterialComponents.Chip.Filter">
-        <item name="chipBackgroundColor">@color/chip_bg_state</item>
-        <item name="android:textColor">@color/white</item>
-        <item name="checkedIconVisible">false</item>
-        <item name="chipStrokeWidth">0dp</item>
     </style>
 </resources>
