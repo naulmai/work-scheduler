@@ -1,4 +1,4 @@
-package com.example.ringerscheduler
+package com.naul.workscheduler
 
 import android.app.AlarmManager
 import android.app.PendingIntent
@@ -30,6 +30,24 @@ class AlarmScheduler(private val context: Context) {
             Constants.REQUEST_CODE_MUTE,
             preferenceHelper.muteHour,
             preferenceHelper.muteMinute
+        )
+
+        // Schedule Pre-mute notification 10 minutes before
+        val muteCalendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, preferenceHelper.muteHour)
+            set(Calendar.MINUTE, preferenceHelper.muteMinute)
+            set(Calendar.SECOND, 0)
+        }
+        
+        val preMuteCalendar = (muteCalendar.clone() as Calendar).apply {
+            add(Calendar.MINUTE, -10)
+        }
+        
+        scheduleAlarm(
+            Constants.ACTION_PRE_MUTE,
+            Constants.REQUEST_CODE_PRE_MUTE,
+            preMuteCalendar.get(Calendar.HOUR_OF_DAY),
+            preMuteCalendar.get(Calendar.MINUTE)
         )
 
         scheduleAlarm(

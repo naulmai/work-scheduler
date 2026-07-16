@@ -3,25 +3,25 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Dark Theme Palette -->
-    <color name="background">#0E1116</color>
-    <color name="surface">#1C222C</color>
-    <color name="primary">#4A69FF</color>
-    <color name="primary_variant">#3549B3</color>
-    <color name="secondary">#82B1FF</color>
+    <!-- High Contrast Material Dark Palette -->
+    <color name="background">#121212</color> <!-- Material Dark Background -->
+    <color name="surface">#32363E</color>    <!-- MUCH lighter gray-blue for boxes -->
+    <color name="primary">#BB86FC</color>
+    <color name="primary_variant">#3700B3</color>
+    <color name="secondary">#03DAC6</color>
 
     <color name="text_primary">#FFFFFF</color>
-    <color name="text_secondary">#94A3B8</color>
-    <color name="text_error">#FF5F5F</color>
+    <color name="text_secondary">#B0B8C1</color>
+    <color name="text_error">#FF8A80</color>
 
     <!-- UI Components -->
-    <color name="card_stroke">#2D3748</color>
-    <color name="chip_unselected_bg">#2D3748</color>
-    <color name="chip_bg_selected">#4A69FF</color>
-    <color name="chip_unselected_border">#3A3A3C</color>
+    <color name="card_stroke">#4A515B</color>   <!-- Visible stroke -->
+    <color name="chip_unselected_bg">#3E444D</color>
+    <color name="chip_bg_selected">#BB86FC</color>
+    <color name="chip_unselected_border">#5C646E</color>
 
     <!-- Status Colors -->
-    <color name="success_green">#4ADE80</color> <!-- Modern Emerald/Mint Green -->
-    <color name="status_active_bg">#1A4ADE80</color> <!-- Light Green tint -->
-    <color name="status_disabled_bg">#1AFF5F5F</color> <!-- Light Red tint -->
+    <color name="success_green">#03DAC6</color>
+    <color name="status_active_bg">#1A03DAC6</color>
+    <color name="status_disabled_bg">#1AFF8A80</color>
 </resources>

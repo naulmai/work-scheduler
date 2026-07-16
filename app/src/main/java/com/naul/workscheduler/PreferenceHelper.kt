@@ -1,4 +1,4 @@
-package com.example.ringerscheduler
+package com.naul.workscheduler
 
 import android.content.Context
 import android.content.SharedPreferences
@@ -41,4 +41,24 @@ class PreferenceHelper(context: Context) {
     var activeDays: Set<String>
         get() = prefs.getStringSet(Constants.KEY_ACTIVE_DAYS, setOf("2", "3", "4", "5", "6")) ?: setOf("2", "3", "4", "5", "6")
         set(value) = prefs.edit().putStringSet(Constants.KEY_ACTIVE_DAYS, value).apply()
+
+    var skipNextMute: Boolean
+        get() = prefs.getBoolean(Constants.KEY_SKIP_NEXT_MUTE, false)
+        set(value) = prefs.edit().putBoolean(Constants.KEY_SKIP_NEXT_MUTE, value).apply()
+
+    var workLat: Float
+        get() = prefs.getFloat(Constants.KEY_WORK_LAT, 0f)
+        set(value) = prefs.edit().putFloat(Constants.KEY_WORK_LAT, value).apply()
+
+    var workLng: Float
+        get() = prefs.getFloat(Constants.KEY_WORK_LNG, 0f)
+        set(value) = prefs.edit().putFloat(Constants.KEY_WORK_LNG, value).apply()
+
+    var geofenceRadius: Float
+        get() = prefs.getFloat(Constants.KEY_GEOFENCE_RADIUS, 100f) // Default 100m
+        set(value) = prefs.edit().putFloat(Constants.KEY_GEOFENCE_RADIUS, value).apply()
+
+    var isGeofencingEnabled: Boolean
+        get() = prefs.getBoolean(Constants.KEY_GEOFENCING_ENABLED, false)
+        set(value) = prefs.edit().putBoolean(Constants.KEY_GEOFENCING_ENABLED, value).apply()
 }

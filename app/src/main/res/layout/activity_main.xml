@@ -17,6 +17,7 @@
             android:layout_height="?attr/actionBarSize"
             app:title="Work Scheduler"
             app:titleTextColor="@color/white"
+            app:titleCentered="true"
             android:background="@color/background" />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -30,300 +31,9 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="20dp">
+            android:padding="16dp">
 
-            <!-- Enable Scheduler Row -->
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="28dp">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:text="Enable Scheduler"
-                    android:textColor="@color/white"
-                    android:textSize="22sp"
-                    android:textStyle="bold" />
-
-                <com.google.android.material.switchmaterial.SwitchMaterial
-                    android:id="@+id/switchSchedule"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_alignParentEnd="true"
-                    android:layout_centerVertical="true"
-                    app:useMaterialThemeColors="true" />
-            </RelativeLayout>
-
-            <!-- Schedule Settings Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:strokeColor="@color/card_stroke"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <!-- Time Pickers Row -->
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="24dp"
-                        android:orientation="horizontal"
-                        android:baselineAligned="false">
-
-                        <LinearLayout
-                            android:id="@+id/btnMuteTime"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:clickable="true"
-                            android:focusable="true">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Start Time"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="13sp"
-                                android:textAllCaps="true"
-                                android:letterSpacing="0.05" />
-
-                            <TextView
-                                android:id="@+id/tvMuteTime"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="09:00 AM"
-                                android:textColor="@color/white"
-                                android:textSize="22sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:id="@+id/btnUnmuteTime"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:clickable="true"
-                            android:focusable="true">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="End Time"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="13sp"
-                                android:textAllCaps="true"
-                                android:letterSpacing="0.05" />
-
-                            <TextView
-                                android:id="@+id/tvUnmuteTime"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="05:00 PM"
-                                android:textColor="@color/white"
-                                android:textSize="22sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <!-- Active Days Label -->
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="12dp"
-                        android:text="Active Days"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp"
-                        android:textAllCaps="true"
-                        android:letterSpacing="0.05" />
-
-                    <com.google.android.material.chip.ChipGroup
-                        android:id="@+id/chipGroupDays"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        app:chipSpacingHorizontal="8dp">
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipMon"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Mon"
-                            app:chipBackgroundColor="@color/chip_bg_state"
-                            android:textColor="@color/white"
-                            app:checkedIconVisible="false"
-                            app:chipStrokeWidth="0dp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipTue"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Tue"
-                            app:chipBackgroundColor="@color/chip_bg_state"
-                            android:textColor="@color/white"
-                            app:checkedIconVisible="false"
-                            app:chipStrokeWidth="0dp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipWed"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Wed"
-                            app:chipBackgroundColor="@color/chip_bg_state"
-                            android:textColor="@color/white"
-                            app:checkedIconVisible="false"
-                            app:chipStrokeWidth="0dp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipThu"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Thu"
-                            app:chipBackgroundColor="@color/chip_bg_state"
-                            android:textColor="@color/white"
-                            app:checkedIconVisible="false"
-                            app:chipStrokeWidth="0dp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipFri"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Fri"
-                            app:chipBackgroundColor="@color/chip_bg_state"
-                            android:textColor="@color/white"
-                            app:checkedIconVisible="false"
-                            app:chipStrokeWidth="0dp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipSat"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Sat"
-                            app:chipBackgroundColor="@color/chip_bg_state"
-                            android:textColor="@color/white"
-                            app:checkedIconVisible="false"
-                            app:chipStrokeWidth="0dp" />
-
-                        <com.google.android.material.chip.Chip
-                            android:id="@+id/chipSun"
-                            style="@style/Widget.MaterialComponents.Chip.Filter"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Sun"
-                            app:chipBackgroundColor="@color/chip_bg_state"
-                            android:textColor="@color/white"
-                            app:checkedIconVisible="false"
-                            app:chipStrokeWidth="0dp" />
-                    </com.google.android.material.chip.ChipGroup>
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Wi-Fi Exception Card -->
-            <com.google.android.material.card.MaterialCardView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:strokeColor="@color/card_stroke"
-                app:strokeWidth="1dp">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="20dp">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Wi-Fi Exception (Home)"
-                        android:textColor="@color/white"
-                        android:textSize="16sp"
-                        android:textStyle="bold" />
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="4dp"
-                        android:text="The app will skip muting if you are connected to this network."
-                        android:textColor="@color/text_secondary"
-                        android:textSize="12sp" />
-
-                    <RelativeLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="12dp">
-
-                        <EditText
-                            android:id="@+id/etWifiSsid"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_toStartOf="@+id/btnPickWifi"
-                            android:layout_centerVertical="true"
-                            android:hint="e.g. MyHomeNetwork"
-                            android:inputType="textNoSuggestions"
-                            android:textColor="@color/white"
-                            android:textColorHint="@color/text_secondary"
-                            android:background="@android:color/transparent"
-                            android:paddingVertical="8dp"
-                            android:textSize="16sp" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnPickWifi"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
-                            android:text="Pick"
-                            android:textColor="@color/primary"
-                            android:minWidth="0dp"
-                            android:paddingHorizontal="8dp"
-                            android:insetTop="0dp"
-                            android:insetBottom="0dp" />
-
-                        <ProgressBar
-                            android:id="@+id/pbWifiScan"
-                            style="?android:attr/progressBarStyleSmall"
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:layout_alignParentEnd="true"
-                            android:layout_centerVertical="true"
-                            android:layout_marginEnd="8dp"
-                            android:visibility="gone" />
-
-                    </RelativeLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:background="@color/primary"
-                        android:alpha="0.5" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Current Status Card -->
+            <!-- System Status Card -->
             <com.google.android.material.card.MaterialCardView
                 android:id="@+id/cardStatus"
                 android:layout_width="match_parent"
@@ -377,16 +87,36 @@
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Permissions Card -->
+            <!-- Enable Scheduler Row -->
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="24dp"
+                android:paddingHorizontal="4dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:text="Enable Scheduler"
+                    android:textColor="@color/white"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <com.google.android.material.switchmaterial.SwitchMaterial
+                    android:id="@+id/switchSchedule"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    app:useMaterialThemeColors="true" />
+            </RelativeLayout>
+
+            <!-- Schedule Settings Card -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:strokeColor="@color/card_stroke"
-                app:strokeWidth="1dp">
+                android:layout_marginBottom="16dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -394,196 +124,478 @@
                     android:orientation="vertical"
                     android:padding="20dp">
 
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp"
+                        android:orientation="horizontal">
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_schedule"
+                            app:tint="@color/primary" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="TIME SCHEDULE"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
+
+                    <!-- Time Pickers Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="24dp"
+                        android:orientation="horizontal"
+                        android:baselineAligned="false">
+
+                        <LinearLayout
+                            android:id="@+id/btnMuteTime"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackground"
+                            android:padding="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Start Time"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp"
+                                android:textAllCaps="true" />
+
+                            <TextView
+                                android:id="@+id/tvMuteTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="08:30 AM"
+                                android:textColor="@color/white"
+                                android:textSize="22sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/btnUnmuteTime"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:background="?attr/selectableItemBackground"
+                            android:padding="8dp">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="End Time"
+                                android:textColor="@color/text_secondary"
+                                android:textSize="11sp"
+                                android:textAllCaps="true" />
+
+                            <TextView
+                                android:id="@+id/tvUnmuteTime"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="06:00 PM"
+                                android:textColor="@color/white"
+                                android:textSize="22sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <!-- Active Days Label -->
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Required Permissions"
+                        android:layout_marginBottom="12dp"
+                        android:text="Active Days"
                         android:textColor="@color/text_secondary"
-                        android:textSize="13sp"
-                        android:textAllCaps="true"
-                        android:letterSpacing="0.05" />
+                        android:textSize="11sp"
+                        android:textAllCaps="true" />
 
-                    <!-- DND Permission Row -->
+                    <com.google.android.material.chip.ChipGroup
+                        android:id="@+id/chipGroupDays"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:chipSpacingHorizontal="8dp">
+                        <com.google.android.material.chip.Chip android:id="@+id/chipMon" style="@style/CustomChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mon" />
+                        <com.google.android.material.chip.Chip android:id="@+id/chipTue" style="@style/CustomChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tue" />
+                        <com.google.android.material.chip.Chip android:id="@+id/chipWed" style="@style/CustomChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wed" />
+                        <com.google.android.material.chip.Chip android:id="@+id/chipThu" style="@style/CustomChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Thu" />
+                        <com.google.android.material.chip.Chip android:id="@+id/chipFri" style="@style/CustomChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Fri" />
+                        <com.google.android.material.chip.Chip android:id="@+id/chipSat" style="@style/CustomChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sat" />
+                        <com.google.android.material.chip.Chip android:id="@+id/chipSun" style="@style/CustomChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sun" />
+                    </com.google.android.material.chip.ChipGroup>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Wi-Fi Exception Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp"
+                        android:orientation="horizontal">
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_wifi"
+                            app:tint="@color/primary" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="WIFI EXCEPTION"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Skip muting if connected to this network."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <RelativeLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp">
+
+                        <EditText
+                            android:id="@+id/etWifiSsid"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_toStartOf="@+id/btnPickWifi"
+                            android:layout_centerVertical="true"
+                            android:hint="e.g. MyHomeNetwork"
+                            android:inputType="textNoSuggestions"
+                            android:textColor="@color/white"
+                            android:textColorHint="@color/text_secondary"
+                            android:background="@android:color/transparent"
+                            android:paddingVertical="8dp"
+                            android:textSize="16sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnPickWifi"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:text="Pick"
+                            android:textColor="@color/primary"
+                            android:minWidth="0dp"
+                            android:paddingHorizontal="8dp" />
+
+                        <ProgressBar
+                            android:id="@+id/pbWifiScan"
+                            style="?android:attr/progressBarStyleSmall"
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginEnd="8dp"
+                            android:visibility="gone" />
+
+                    </RelativeLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@color/primary"
+                        android:alpha="0.3" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Work Location Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp"
+                        android:orientation="horizontal">
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_location"
+                            app:tint="@color/primary" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="LOCATION REQUIREMENT"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Only mute if you are at this specific location."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            android:id="@+id/tvWorkLocation"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Location: Not Set"
+                            android:textColor="@color/white"
+                            android:textSize="14sp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnSetWorkLocation"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Set Current"
+                            android:textColor="@color/primary"
+                            android:minWidth="0dp"
+                            android:paddingHorizontal="8dp" />
+                    </LinearLayout>
+
+                    <com.google.android.material.switchmaterial.SwitchMaterial
+                        android:id="@+id/switchGeofencing"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:text="Require this location"
+                        android:textColor="@color/white"
+                        app:useMaterialThemeColors="true" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Cloud Backup Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp"
+                        android:orientation="horizontal">
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_cloud"
+                            app:tint="@color/primary" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="CLOUD BACKUP"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/tvCloudStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sync your settings across devices."
+                        android:textColor="@color/text_secondary"
+                        android:textSize="12sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        android:orientation="horizontal"
+                        android:gravity="end">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnRestore"
+                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Restore"
+                            android:textColor="@color/text_secondary"
+                            android:minWidth="0dp"
+                            android:paddingHorizontal="12dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnBackup"
+                            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="Backup Now"
+                            android:textAllCaps="false"
+                            app:backgroundTint="@color/primary"
+                            app:cornerRadius="12dp"
+                            android:textColor="@color/background"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Permissions Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="16dp"
+                        android:orientation="horizontal">
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_security"
+                            app:tint="@color/primary" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="REQUIRED PERMISSIONS"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
+
                     <LinearLayout
                         android:id="@+id/layoutPermissionDnd"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="16dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Notification Policy"
-                                android:textColor="@color/white"
-                                android:textStyle="bold" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Required to change Ringer Mode"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="12sp" />
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Notification Policy" android:textColor="@color/white" android:textStyle="bold" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Required to change Ringer Mode" android:textColor="@color/text_secondary" android:textSize="11sp" />
                         </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnGrantDnd"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Grant"
-                            android:textColor="@color/primary" />
-
-                        <ImageView
-                            android:id="@+id/ivCheckDnd"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_check_circle"
-                            app:tint="@color/success_green"
-                            android:visibility="gone" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnGrantDnd" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Grant" android:textColor="@color/primary" />
+                        <ImageView android:id="@+id/ivCheckDnd" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/success_green" android:visibility="gone" />
                     </LinearLayout>
 
-                    <!-- Exact Alarm Permission Row -->
                     <LinearLayout
                         android:id="@+id/layoutPermissionAlarm"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="12dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Exact Alarm"
-                                android:textColor="@color/white"
-                                android:textStyle="bold" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Required for precise timing"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="12sp" />
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Exact Alarm" android:textColor="@color/white" android:textStyle="bold" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Required for precise timing" android:textColor="@color/text_secondary" android:textSize="11sp" />
                         </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnGrantAlarm"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Grant"
-                            android:textColor="@color/primary" />
-
-                        <ImageView
-                            android:id="@+id/ivCheckAlarm"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_check_circle"
-                            app:tint="@color/success_green"
-                            android:visibility="gone" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnGrantAlarm" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Grant" android:textColor="@color/primary" />
+                        <ImageView android:id="@+id/ivCheckAlarm" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/success_green" android:visibility="gone" />
                     </LinearLayout>
 
-                    <!-- Location Permission Row -->
                     <LinearLayout
                         android:id="@+id/layoutPermissionLocation"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="12dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Location Access"
-                                android:textColor="@color/white"
-                                android:textStyle="bold" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Required for Wi-Fi scanning"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="12sp" />
+                        android:layout_marginBottom="12dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Location Access" android:textColor="@color/white" android:textStyle="bold" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Required for Wi-Fi scanning" android:textColor="@color/text_secondary" android:textSize="11sp" />
                         </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnGrantLocation"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Grant"
-                            android:textColor="@color/primary" />
-
-                        <ImageView
-                            android:id="@+id/ivCheckLocation"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_check_circle"
-                            app:tint="@color/success_green"
-                            android:visibility="gone" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnGrantLocation" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Grant" android:textColor="@color/primary" />
+                        <ImageView android:id="@+id/ivCheckLocation" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/success_green" android:visibility="gone" />
                     </LinearLayout>
 
-                    <!-- Background Location Permission Row -->
                     <LinearLayout
                         android:id="@+id/layoutPermissionBackgroundLocation"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginTop="12dp"
+                        android:layout_marginBottom="12dp"
                         android:visibility="gone">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Background Location"
-                                android:textColor="@color/white"
-                                android:textStyle="bold" />
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Required to detect Wi-Fi while asleep"
-                                android:textColor="@color/text_secondary"
-                                android:textSize="12sp" />
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Background Location" android:textColor="@color/white" android:textStyle="bold" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Required to detect Wi-Fi while asleep" android:textColor="@color/text_secondary" android:textSize="11sp" />
                         </LinearLayout>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnGrantBackgroundLocation"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Grant"
-                            android:textColor="@color/primary" />
-
-                        <ImageView
-                            android:id="@+id/ivCheckBackgroundLocation"
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
-                            android:src="@drawable/ic_check_circle"
-                            app:tint="@color/success_green"
-                            android:visibility="gone" />
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnGrantBackgroundLocation" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Grant" android:textColor="@color/primary" />
+                        <ImageView android:id="@+id/ivCheckBackgroundLocation" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/success_green" android:visibility="gone" />
                     </LinearLayout>
 
+                    <LinearLayout
+                        android:id="@+id/layoutPermissionNotifications"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:visibility="gone">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Notifications" android:textColor="@color/white" android:textStyle="bold" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Required for alerts and skip option" android:textColor="@color/text_secondary" android:textSize="11sp" />
+                        </LinearLayout>
+                        <com.google.android.material.button.MaterialButton android:id="@+id/btnGrantNotifications" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Grant" android:textColor="@color/primary" />
+                        <ImageView android:id="@+id/ivCheckNotifications" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/success_green" android:visibility="gone" />
+                    </LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -591,11 +603,7 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="@color/surface"
-                app:cardCornerRadius="16dp"
-                app:cardElevation="2dp"
-                app:strokeColor="@color/card_stroke"
-                app:strokeWidth="1dp">
+                android:layout_marginBottom="24dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -603,20 +611,32 @@
                     android:orientation="vertical"
                     android:padding="20dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Battery Optimization"
-                        android:textColor="@color/text_secondary"
-                        android:textSize="13sp"
-                        android:textAllCaps="true"
-                        android:letterSpacing="0.05" />
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="8dp"
+                        android:orientation="horizontal">
+                        <ImageView
+                            android:layout_width="18dp"
+                            android:layout_height="18dp"
+                            android:src="@drawable/ic_battery"
+                            app:tint="@color/primary" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:text="BATTERY OPTIMIZATION"
+                            android:textColor="@color/text_secondary"
+                            android:textSize="12sp"
+                            android:textStyle="bold"
+                            android:letterSpacing="0.05" />
+                    </LinearLayout>
 
                     <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:text="For reliable scheduling, please ensure this app is excluded from Battery Optimization.\n\nXiaomi/HyperOS Users: Enable 'Autostart' and set Background settings to 'No Restrictions'."
+                        android:text="Keep the app alive for reliable scheduling."
                         android:textColor="@color/text_secondary"
                         android:textSize="12sp" />
 

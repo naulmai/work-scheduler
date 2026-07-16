@@ -1,8 +1,9 @@
-package com.example.ringerscheduler
+package com.naul.workscheduler
 
 import android.Manifest
 import android.app.AlarmManager
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
@@ -14,6 +15,7 @@ import android.net.wifi.WifiManager
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.ImageView
@@ -25,6 +27,13 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.android.gms.location.Geofence
+import com.google.android.gms.location.GeofencingRequest
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.chip.Chip
 import com.google.android.material.chip.ChipGroup
@@ -46,16 +55,30 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnGrantAlarm: MaterialButton
     private lateinit var btnGrantLocation: MaterialButton
     private lateinit var btnGrantBackgroundLocation: MaterialButton
+    private lateinit var btnGrantNotifications: MaterialButton
     private lateinit var ivCheckDnd: ImageView
     private lateinit var ivCheckAlarm: ImageView
     private lateinit var ivCheckLocation: ImageView
+    private lateinit var ivCheckBackgroundLocation: ImageView
+    private lateinit var ivCheckNotifications: ImageView
     private lateinit var chipGroupDays: ChipGroup
     private lateinit var btnPickWifi: MaterialButton
     private lateinit var pbWifiScan: ProgressBar
     private lateinit var btnBatterySettings: MaterialButton
+    
+    private lateinit var tvCloudStatus: TextView
+    private lateinit var btnBackup: MaterialButton
+    private lateinit var btnRestore: MaterialButton
+
+    private lateinit var tvWorkLocation: TextView
+    private lateinit var btnSetWorkLocation: MaterialButton
+    private lateinit var switchGeofencing: SwitchMaterial
 
     private lateinit var preferenceHelper: PreferenceHelper
     private lateinit var alarmScheduler: AlarmScheduler
+    private lateinit var backupManager: BackupManager
+    
+    private val auth = FirebaseAuth.getInstance()
 
     private val requestLocationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -85,10 +108,12 @@ class MainActivity : AppCompatActivity() {
 
         preferenceHelper = PreferenceHelper(this)
         alarmScheduler = AlarmScheduler(this)
+        backupManager = BackupManager(this)
 
         initViews()
         setupUI()
         checkPermissions()
+        updateCloudUI()
     }
 
     private fun initViews() {
@@ -103,13 +128,22 @@ class MainActivity : AppCompatActivity() {
         btnGrantAlarm = findViewById(R.id.btnGrantAlarm)
         btnGrantLocation = findViewById(R.id.btnGrantLocation)
         btnGrantBackgroundLocation = findViewById(R.id.btnGrantBackgroundLocation)
+        btnGrantNotifications = findViewById(R.id.btnGrantNotifications)
         ivCheckDnd = findViewById(R.id.ivCheckDnd)
         ivCheckAlarm = findViewById(R.id.ivCheckAlarm)
         ivCheckLocation = findViewById(R.id.ivCheckLocation)
+        ivCheckBackgroundLocation = findViewById(R.id.ivCheckBackgroundLocation)
+        ivCheckNotifications = findViewById(R.id.ivCheckNotifications)
         chipGroupDays = findViewById(R.id.chipGroupDays)
         btnPickWifi = findViewById(R.id.btnPickWifi)
         pbWifiScan = findViewById(R.id.pbWifiScan)
         btnBatterySettings = findViewById(R.id.btnBatterySettings)
+        tvCloudStatus = findViewById(R.id.tvCloudStatus)
+        btnBackup = findViewById(R.id.btnBackup)
+        btnRestore = findViewById(R.id.btnRestore)
+        tvWorkLocation = findViewById(R.id.tvWorkLocation)
+        btnSetWorkLocation = findViewById(R.id.btnSetWorkLocation)
+        switchGeofencing = findViewById(R.id.switchGeofencing)
     }
 
     private fun setupUI() {
@@ -212,6 +246,130 @@ class MainActivity : AppCompatActivity() {
         btnBatterySettings.setOnClickListener {
             val intent = Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS)
             startActivity(intent)
+        }
+
+        btnGrantNotifications.setOnClickListener {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                requestLocationPermissionLauncher.launch(arrayOf(Manifest.permission.POST_NOTIFICATIONS))
+            }
+        }
+
+        btnBackup.setOnClickListener {
+            if (auth.currentUser == null) {
+                signInGoogle()
+            } else {
+                performBackup()
+            }
+        }
+
+        btnRestore.setOnClickListener {
+            if (auth.currentUser == null) {
+                signInGoogle()
+            } else {
+                performRestore()
+            }
+        }
+
+        setupGeofencingUI()
+    }
+
+    private fun updateCloudUI() {
+        val user = auth.currentUser
+        if (user != null) {
+            tvCloudStatus.text = "Logged in as ${user.email}"
+            btnBackup.text = "Backup Now"
+        } else {
+            tvCloudStatus.text = "Sign in to sync your settings"
+            btnBackup.text = "Login to Sync"
+        }
+    }
+
+    private fun signInGoogle() {
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+        val googleSignInClient = GoogleSignIn.getClient(this, gso)
+        signInLauncher.launch(googleSignInClient.signInIntent)
+    }
+
+    private val signInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+        try {
+            val account = task.getResult(Exception::class.java)!!
+            firebaseAuthWithGoogle(account.idToken!!)
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Google Sign-In failed: ${e.message}", e)
+            Toast.makeText(this, "Google Sign-In failed: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private fun firebaseAuthWithGoogle(idToken: String) {
+        val credential = GoogleAuthProvider.getCredential(idToken, null)
+        auth.signInWithCredential(credential).addOnCompleteListener(this) { task ->
+            if (task.isSuccessful) {
+                updateCloudUI()
+                Toast.makeText(this, "Cloud integration active!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Firebase Auth failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun performBackup() {
+        btnBackup.isEnabled = false
+        btnBackup.text = "Backing up..."
+        backupManager.backupData { success ->
+            btnBackup.isEnabled = true
+            updateCloudUI()
+            if (success) {
+                Toast.makeText(this, "Settings saved to cloud", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Backup failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun performRestore() {
+        btnRestore.isEnabled = false
+        backupManager.restoreData { success ->
+            btnRestore.isEnabled = true
+            if (success) {
+                // UI Refresh
+                setupUI()
+                updateStatusCard()
+                Toast.makeText(this, "Settings restored!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "No backup found or restore failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun setupGeofencingUI() {
+        if (preferenceHelper.workLat != 0f && preferenceHelper.workLng != 0f) {
+            tvWorkLocation.text = "Location: Set (Lat: ${String.format("%.4f", preferenceHelper.workLat)})"
+        }
+        
+        switchGeofencing.isChecked = preferenceHelper.isGeofencingEnabled
+        
+        btnSetWorkLocation.setOnClickListener {
+            updateCurrentWorkLocation()
+        }
+
+        switchGeofencing.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                if (preferenceHelper.workLat == 0f) {
+                    Toast.makeText(this, "Please set work location first", Toast.LENGTH_SHORT).show()
+                    switchGeofencing.isChecked = false
+                    return@setOnCheckedChangeListener
+                }
+                if (!hasBackgroundLocationPermission()) {
+                    Toast.makeText(this, "Background location required", Toast.LENGTH_SHORT).show()
+                    switchGeofencing.isChecked = false
+                    return@setOnCheckedChangeListener
+                }
+            }
+            preferenceHelper.isGeofencingEnabled = isChecked
         }
     }
 
@@ -337,6 +495,21 @@ class MainActivity : AppCompatActivity() {
         } else {
             findViewById<View>(R.id.layoutPermissionBackgroundLocation).visibility = View.GONE
         }
+
+        // Update Notification UI
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            findViewById<View>(R.id.layoutPermissionNotifications).visibility = View.VISIBLE
+            val hasNotifications = ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+            if (hasNotifications) {
+                btnGrantNotifications.visibility = View.GONE
+                findViewById<View>(R.id.ivCheckNotifications).visibility = View.VISIBLE
+            } else {
+                btnGrantNotifications.visibility = View.VISIBLE
+                findViewById<View>(R.id.ivCheckNotifications).visibility = View.GONE
+            }
+        } else {
+            findViewById<View>(R.id.layoutPermissionNotifications).visibility = View.GONE
+        }
     }
 
     private fun hasSpecialPermissions(): Boolean {
@@ -348,6 +521,32 @@ class MainActivity : AppCompatActivity() {
             if (!alarmManager.canScheduleExactAlarms()) return false
         }
         return true
+    }
+
+    private fun hasBackgroundLocationPermission(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_BACKGROUND_LOCATION) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
+    private fun updateCurrentWorkLocation() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestLocationPermissionLauncher.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION))
+            return
+        }
+        
+        LocationServices.getFusedLocationProviderClient(this).lastLocation.addOnSuccessListener { location ->
+            if (location != null) {
+                preferenceHelper.workLat = location.latitude.toFloat()
+                preferenceHelper.workLng = location.longitude.toFloat()
+                tvWorkLocation.text = "Location: Set (Lat: ${String.format("%.4f", preferenceHelper.workLat)})"
+                Toast.makeText(this, "Work location updated!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Could not get current location", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun updateTimeText(textView: TextView, hour: Int, minute: Int) {

@@ -1,4 +1,4 @@
-package com.example.ringerscheduler
+package com.naul.workscheduler
 
 import android.content.BroadcastReceiver
 import android.content.Context
