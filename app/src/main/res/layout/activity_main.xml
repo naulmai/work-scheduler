@@ -27,7 +27,7 @@
                 android:insetTop="0dp"
                 android:insetRight="0dp"
                 android:insetBottom="0dp"
-                app:icon="@drawable/ic_theme_toggle"
+                app:iconTint="?android:attr/textColorPrimary"
                 app:iconSize="24dp" />
         </com.google.android.material.appbar.MaterialToolbar>
 
@@ -70,7 +70,7 @@
                             android:text="CURRENT STATUS"
                             android:textSize="10sp"
                             android:textStyle="bold"
-                            android:letterSpacing="0.1"
+                            android:letterSpacing="0.15"
                             android:textColor="?android:attr/textColorSecondary" />
                         <TextView
                             android:id="@+id/tvCurrentStatus"
@@ -143,6 +143,7 @@
                             android:text="START"
                             android:textSize="10sp"
                             android:textStyle="bold"
+                            android:letterSpacing="0.1"
                             android:textColor="@color/accent_teal" />
                         <TextView
                             android:id="@+id/tvMuteTime"
@@ -176,6 +177,7 @@
                             android:text="FINISH"
                             android:textSize="10sp"
                             android:textStyle="bold"
+                            android:letterSpacing="0.1"
                             android:textColor="@color/accent_purple" />
                         <TextView
                             android:id="@+id/tvUnmuteTime"
@@ -206,6 +208,7 @@
                         android:text="RECURRENCE"
                         android:textSize="11sp"
                         android:textStyle="bold"
+                        android:letterSpacing="0.1"
                         android:layout_marginBottom="16dp"
                         android:textColor="?android:attr/textColorSecondary" />
                     <HorizontalScrollView
@@ -218,13 +221,13 @@
                             android:layout_height="wrap_content"
                             app:singleLine="true"
                             app:chipSpacingHorizontal="8dp">
-                            <com.google.android.material.chip.Chip android:id="@+id/chipMon" style="@style/ModernChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mon" />
-                            <com.google.android.material.chip.Chip android:id="@+id/chipTue" style="@style/ModernChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tue" />
-                            <com.google.android.material.chip.Chip android:id="@+id/chipWed" style="@style/ModernChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wed" />
-                            <com.google.android.material.chip.Chip android:id="@+id/chipThu" style="@style/ModernChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Thu" />
-                            <com.google.android.material.chip.Chip android:id="@+id/chipFri" style="@style/ModernChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Fri" />
-                            <com.google.android.material.chip.Chip android:id="@+id/chipSat" style="@style/ModernChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sat" />
-                            <com.google.android.material.chip.Chip android:id="@+id/chipSun" style="@style/ModernChip" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sun" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipMon" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Mon" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipTue" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Tue" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipWed" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Wed" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipThu" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Thu" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipFri" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Fri" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipSat" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sat" />
+                            <com.google.android.material.chip.Chip android:id="@+id/chipSun" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sun" />
                         </com.google.android.material.chip.ChipGroup>
                     </HorizontalScrollView>
                 </LinearLayout>
@@ -246,6 +249,7 @@
                         android:text="LATEST ACTIVITY"
                         android:textSize="11sp"
                         android:textStyle="bold"
+                        android:letterSpacing="0.1"
                         android:layout_marginBottom="12dp"
                         android:textColor="?android:attr/textColorSecondary" />
                     <TextView
@@ -275,6 +279,7 @@
                         android:text="SMART EXCEPTIONS"
                         android:textSize="11sp"
                         android:textStyle="bold"
+                        android:letterSpacing="0.1"
                         android:layout_marginBottom="16dp"
                         android:textColor="?android:attr/textColorSecondary" />
 
@@ -291,19 +296,21 @@
                             android:hint="Home Wi-Fi Name"
                             android:background="@android:color/transparent"
                             android:textSize="16sp"
+                            android:textStyle="bold"
                             android:textColor="?android:attr/textColorPrimary"
                             android:paddingVertical="8dp" />
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnPickWifi"
-                            style="@style/Widget.MaterialComponents.Button.TextButton"
+                            style="@style/ActionBtn"
                             android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
+                            android:layout_height="32dp"
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:text="PICK"
                             android:textColor="@color/accent_purple"
+                            app:strokeColor="@color/accent_purple"
                             android:minWidth="0dp"
-                            android:padding="8dp" />
+                            android:paddingHorizontal="12dp" />
                         <ProgressBar
                             android:id="@+id/pbWifiScan"
                             style="?android:attr/progressBarStyleSmall"
@@ -319,7 +326,7 @@
                         android:layout_height="1dp"
                         android:background="?android:attr/textColorSecondary"
                         android:alpha="0.1"
-                        android:layout_marginVertical="8dp" />
+                        android:layout_marginVertical="12dp" />
 
                     <!-- Location -->
                     <LinearLayout
@@ -330,8 +337,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:orientation="horizontal"
-                            android:gravity="center_vertical"
-                            android:paddingVertical="4dp">
+                            android:gravity="center_vertical">
                             <TextView
                                 android:id="@+id/tvWorkLocation"
                                 android:layout_width="0dp"
@@ -342,18 +348,20 @@
                                 android:textColor="?android:attr/textColorPrimary" />
                             <com.google.android.material.button.MaterialButton
                                 android:id="@+id/btnSetWorkLocation"
-                                style="@style/Widget.MaterialComponents.Button.TextButton"
+                                style="@style/ActionBtn"
                                 android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
+                                android:layout_height="32dp"
                                 android:text="SET"
                                 android:textColor="@color/accent_purple"
+                                app:strokeColor="@color/accent_purple"
                                 android:minWidth="0dp"
-                                android:padding="8dp" />
+                                android:paddingHorizontal="12dp" />
                         </LinearLayout>
                         <com.google.android.material.switchmaterial.SwitchMaterial
                             android:id="@+id/switchGeofencing"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
                             android:text="Require this location"
                             android:textColor="?android:attr/textColorSecondary"
                             android:textSize="14sp" />
@@ -377,6 +385,7 @@
                         android:text="CLOUD SYNC"
                         android:textSize="11sp"
                         android:textStyle="bold"
+                        android:letterSpacing="0.1"
                         android:layout_marginBottom="12dp"
                         android:textColor="?android:attr/textColorSecondary" />
                     <TextView
@@ -397,13 +406,15 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="RESTORE"
-                            android:textColor="?android:attr/textColorSecondary" />
+                            android:textColor="?android:attr/textColorSecondary"
+                            android:textStyle="bold" />
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnBackup"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="BACKUP"
                             android:layout_marginStart="12dp"
+                            android:textStyle="bold"
                             app:cornerRadius="12dp" />
                     </LinearLayout>
                 </LinearLayout>
@@ -425,15 +436,16 @@
                         android:text="REQUIRED PERMISSIONS"
                         android:textSize="11sp"
                         android:textStyle="bold"
+                        android:letterSpacing="0.1"
                         android:layout_marginBottom="16dp"
                         android:textColor="?android:attr/textColorSecondary" />
 
                     <!-- Permission Rows -->
-                    <LinearLayout android:id="@+id/layoutPermissionDnd" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Notification Policy" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantDnd" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GRANT" android:textColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckDnd" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
-                    <LinearLayout android:id="@+id/layoutPermissionAlarm" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Exact Alarm" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantAlarm" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GRANT" android:textColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckAlarm" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
-                    <LinearLayout android:id="@+id/layoutPermissionLocation" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Fine Location" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantLocation" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GRANT" android:textColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckLocation" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
-                    <LinearLayout android:id="@+id/layoutPermissionBackgroundLocation" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Always Location" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantBackgroundLocation" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GRANT" android:textColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckBackgroundLocation" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
-                    <LinearLayout android:id="@+id/layoutPermissionNotifications" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Notifications" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantNotifications" style="@style/Widget.MaterialComponents.Button.TextButton" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="GRANT" android:textColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckNotifications" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
+                    <LinearLayout android:id="@+id/layoutPermissionDnd" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:layout_marginBottom="12dp" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Notification Policy" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantDnd" style="@style/ActionBtn" android:layout_width="wrap_content" android:layout_height="32dp" android:text="GRANT" android:textColor="@color/accent_purple" app:strokeColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckDnd" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
+                    <LinearLayout android:id="@+id/layoutPermissionAlarm" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Exact Alarm" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantAlarm" style="@style/ActionBtn" android:layout_width="wrap_content" android:layout_height="32dp" android:text="GRANT" android:textColor="@color/accent_purple" app:strokeColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckAlarm" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
+                    <LinearLayout android:id="@+id/layoutPermissionLocation" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Fine Location" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantLocation" style="@style/ActionBtn" android:layout_width="wrap_content" android:layout_height="32dp" android:text="GRANT" android:textColor="@color/accent_purple" app:strokeColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckLocation" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
+                    <LinearLayout android:id="@+id/layoutPermissionBackgroundLocation" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginBottom="12dp" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Always Location" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantBackgroundLocation" style="@style/ActionBtn" android:layout_width="wrap_content" android:layout_height="32dp" android:text="GRANT" android:textColor="@color/accent_purple" app:strokeColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckBackgroundLocation" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
+                    <LinearLayout android:id="@+id/layoutPermissionNotifications" android:layout_width="match_parent" android:layout_height="wrap_content" android:gravity="center_vertical"><TextView android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Notifications" android:textColor="?android:attr/textColorPrimary"/><com.google.android.material.button.MaterialButton android:id="@+id/btnGrantNotifications" style="@style/ActionBtn" android:layout_width="wrap_content" android:layout_height="32dp" android:text="GRANT" android:textColor="@color/accent_purple" app:strokeColor="@color/accent_purple"/><ImageView android:id="@+id/ivCheckNotifications" android:layout_width="24dp" android:layout_height="24dp" android:src="@drawable/ic_check_circle" app:tint="@color/accent_teal" android:visibility="gone" /></LinearLayout>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -444,7 +456,8 @@
                 android:layout_height="wrap_content"
                 android:text="System Battery Optimization"
                 android:textColor="?android:attr/textColorSecondary"
-                android:textSize="12sp" />
+                android:textSize="12sp"
+                android:textStyle="bold" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

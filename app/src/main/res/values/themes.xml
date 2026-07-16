@@ -2,29 +2,23 @@
 <resources>
     <!-- Base application theme. -->
     <style name="Theme.WorkScheduler" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <!-- Main Palette -->
         <item name="colorPrimary">@color/accent_purple</item>
         <item name="colorSecondary">@color/accent_teal</item>
-
-        <!-- Semantic Colors Mapping (Dark Default) -->
         <item name="android:windowBackground">@color/bg_dark</item>
         <item name="android:textColorPrimary">@color/text_primary_dark</item>
         <item name="android:textColorSecondary">@color/text_secondary_dark</item>
-
         <item name="materialCardViewStyle">@style/CustomCardStyle</item>
+        <item name="chipStyle">@style/ModernChip</item>
     </style>
 
-    <!-- Theme for Light Mode -->
     <style name="Theme.WorkScheduler.Light" parent="Theme.MaterialComponents.Light.NoActionBar">
         <item name="colorPrimary">@color/accent_purple</item>
         <item name="colorSecondary">@color/accent_teal</item>
-
-        <!-- Semantic Colors Mapping -->
         <item name="android:windowBackground">@color/bg_light</item>
         <item name="android:textColorPrimary">@color/text_primary_light</item>
         <item name="android:textColorSecondary">@color/text_secondary_light</item>
-
         <item name="materialCardViewStyle">@style/CustomCardStyle.Light</item>
+        <item name="chipStyle">@style/ModernChip.Light</item>
     </style>
 
     <style name="CustomCardStyle" parent="Widget.MaterialComponents.CardView">
@@ -42,17 +36,39 @@
     </style>
 
     <style name="ModernChip" parent="Widget.MaterialComponents.Chip.Filter">
-        <item name="chipCornerRadius">12dp</item>
-        <item name="chipBackgroundColor">@color/stroke_dark</item>
-        <item name="android:textColor">@color/text_primary_dark</item>
+        <item name="chipCornerRadius">14dp</item>
+        <item name="chipBackgroundColor">@color/chip_bg_state</item>
+        <item name="android:textColor">@color/chip_text_color_managed</item>
         <item name="checkedIconVisible">false</item>
-        <item name="chipStrokeWidth">0dp</item>
+        <item name="chipStrokeWidth">1.5dp</item>
+        <item name="chipStrokeColor">@color/stroke_dark</item>
+    </style>
+
+    <style name="ModernChip.Light" parent="ModernChip">
+        <item name="chipStrokeColor">@color/stroke_light</item>
+    </style>
+
+    <style name="ActionBtn" parent="Widget.MaterialComponents.Button.OutlinedButton">
+        <item name="cornerRadius">12dp</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="strokeWidth">1dp</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
     <style name="CustomTimePickerTheme" parent="ThemeOverlay.MaterialComponents.TimePicker">
         <item name="colorPrimary">@color/accent_purple</item>
         <item name="colorSurface">@color/surface_dark</item>
         <item name="colorOnSurface">@color/white</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+    </style>
+
+    <style name="CustomTimePickerTheme.Light" parent="ThemeOverlay.MaterialComponents.TimePicker">
+        <item name="colorPrimary">@color/accent_purple</item>
+        <item name="colorSurface">@color/white</item>
+        <item name="colorOnSurface">@color/black</item>
         <item name="colorOnPrimary">@color/white</item>
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>

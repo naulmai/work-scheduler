@@ -124,6 +124,10 @@ class MainActivity : AppCompatActivity() {
 
         initViews()
         setupUI()
+        
+        // Update theme toggle icon
+        btnThemeToggle.setIconResource(if (preferenceHelper.isDarkMode) R.drawable.ic_sun else R.drawable.ic_moon)
+
         checkPermissions()
         updateCloudUI()
         updateLatestLog()
@@ -581,12 +585,13 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun showTimePicker(title: String, initialHour: Int, initialMinute: Int, onTimeSelected: (Int, Int) -> Unit) {
+        val themeRes = if (preferenceHelper.isDarkMode) R.style.CustomTimePickerTheme else R.style.CustomTimePickerTheme_Light
         val picker = MaterialTimePicker.Builder()
             .setTimeFormat(TimeFormat.CLOCK_12H)
             .setHour(initialHour)
             .setMinute(initialMinute)
             .setTitleText(title)
-            .setTheme(R.style.CustomTimePickerTheme)
+            .setTheme(themeRes)
             .build()
 
         picker.addOnPositiveButtonClickListener {
